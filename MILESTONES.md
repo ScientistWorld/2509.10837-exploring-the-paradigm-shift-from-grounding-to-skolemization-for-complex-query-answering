@@ -35,4 +35,4 @@
 - `python validate.py --compare` passes, and `scoring/scores.json` now includes LVSA, the no-logic ablation, and the random baseline.
 
 ## Stop Justification
-- Stopped after reaching `secondary_claims`: the core scaled CQA result and a key negation-regularization ablation both run end-to-end in the packaged environment.
+- Completed at milestone `secondary_claims`.
