@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
+action: submit
 gpus: 0
-test: false
+test: true
 milestone: core_claim_plus
-notes: "Validated packaged LVSA reproduction: core synthetic CQA claim and negation-constraint ablation are complete; python validate.py --compare passes."
+notes: "CPU test job to regenerate LVSA predictions with Skolem trace rankings and evaluate the added interpretability metrics."

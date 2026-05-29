@@ -32,7 +32,7 @@
 - Full FB15k-237/NELL CQA reproduction would require larger dataset download and pretrained ComplEx initialization; the first job uses a scaled generated KG to verify the core algorithm.
 - Fixed checkpoint loading by saving path-free metadata and passing
   `weights_only=False` for locally generated checkpoints.
-- The validator compares reproduced primary metrics against `reference.json`, so the scaled synthetic experiment now uses scaled calibration values in `reference.json` rather than paper-table FB15k/FB15k-237/NELL values that are not numerically comparable to this substitute benchmark.
+- Audited the scoring metadata and fixed `scoring/reference.json` to contain paper-reported FB15k-237 main-result and negation-ablation values. The scaled synthetic reproduction remains in `scoring/scores.json` under a separate experiment name because it is not numerically comparable to paper-scale FB15k/FB15k-237/NELL results.
 
 ## Deviations from Paper
 

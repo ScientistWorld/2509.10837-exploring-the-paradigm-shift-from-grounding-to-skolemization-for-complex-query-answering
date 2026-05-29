@@ -112,6 +112,22 @@ class LVSA(nn.Module):
     def scores(self, query: dict):
         return self.score_vec(self.encode_query(query))
 
+    def trace_scores(self, query: dict):
+        device = self.entity.weight.device
+        anchors = torch.tensor(query["anchors"], device=device, dtype=torch.long)
+        rels = query["relations"]
+        qtype = query["type"]
+        if qtype == "2p":
+            h = self.entity(anchors[0])
+            v1 = self.skolem_dependent(h, rels[0], rels[1])
+            return {"v1_scores": self.score_vec(v1)}
+        if qtype == "3p":
+            h = self.entity(anchors[0])
+            v1 = self.skolem_dependent(h, rels[0], rels[1])
+            v2 = self.skolem_dependent(v1, rels[1], rels[2])
+            return {"v1_scores": self.score_vec(v1), "v2_scores": self.score_vec(v2)}
+        return {}
+
     def ce_loss(self, rows):
         losses = []
         for row in rows:

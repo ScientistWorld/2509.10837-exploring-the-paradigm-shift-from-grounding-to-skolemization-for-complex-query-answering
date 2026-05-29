@@ -1,8 +1,8 @@
 {
   "experiments": {
     "scaled_synthetic_cqa": {
-      "description": "Scaled synthetic CQA benchmark used to verify LVSA's core complex-query reasoning and negation-ablation claims with the paper's metrics. These are calibration values for this runnable substitute benchmark, not FB15k/FB15k-237/NELL table values.",
-      "weight": 1.0,
+      "description": "Runnable scaled substitute benchmark. No paper table value exists for this generated dataset; reproduced scores should be compared within scoring/scores.json against the random baseline and ablation.",
+      "weight": 0.01,
       "primary_metric": "mrr",
       "metrics": {
         "mrr": {"higher_is_better": true, "coefficient": 1.0},
@@ -52,6 +52,44 @@
           "mrr_2in": 0.5046817232208834,
           "param_count_k": 251.904
         }
+      }
+    },
+    "paper_standard_fb15k237": {
+      "description": "Paper Table IV/V main-result aggregate on FB15k-237 for Skolemization-based CQA methods. Metrics are percentages reported in the paper.",
+      "weight": 0.69,
+      "primary_metric": "mrr_A",
+      "metrics": {
+        "mrr_A": {"higher_is_better": true, "coefficient": 1.0},
+        "mrr_Ap": {"higher_is_better": true, "coefficient": 0.5},
+        "mrr_An": {"higher_is_better": true, "coefficient": 0.5},
+        "hits1_A": {"higher_is_better": true, "coefficient": 0.5},
+        "hits1_An": {"higher_is_better": true, "coefficient": 0.3}
+      },
+      "results": {
+        "cqd_co": {"type": "baseline", "mrr_A": 13.3, "mrr_Ap": 19.8, "mrr_An": 1.7, "hits1_A": 9.7, "hits1_An": 0.5},
+        "betae": {"type": "baseline", "mrr_A": 15.4, "mrr_Ap": 20.9, "mrr_An": 5.5, "hits1_A": 9.6, "hits1_An": 2.8},
+        "cone": {"type": "baseline", "mrr_A": 17.1, "mrr_Ap": 23.4, "mrr_An": 5.9, "hits1_A": 10.9, "hits1_An": 2.2},
+        "lmpnn": {"type": "baseline", "mrr_A": 18.3, "mrr_Ap": 24.1, "mrr_An": 7.8, "hits1_A": 11.7, "hits1_An": 3.5},
+        "clmpt": {"type": "baseline", "mrr_A": 19.4, "mrr_Ap": 25.9, "mrr_An": 7.9, "hits1_A": 12.2, "hits1_An": 2.9},
+        "lvsa": {"type": "proposed", "mrr_A": 22.4, "mrr_Ap": 28.8, "mrr_An": 10.9, "hits1_A": 15.4, "hits1_An": 5.5}
+      }
+    },
+    "paper_negation_ablation_fb15k237": {
+      "description": "Paper Table VII negation-ablation results on FB15k-237. Metrics are MRR percentages for negated query families.",
+      "weight": 0.3,
+      "primary_metric": "An",
+      "metrics": {
+        "An": {"higher_is_better": true, "coefficient": 1.0},
+        "2in": {"higher_is_better": true, "coefficient": 0.4},
+        "3in": {"higher_is_better": true, "coefficient": 0.4},
+        "inp": {"higher_is_better": true, "coefficient": 0.2},
+        "pin": {"higher_is_better": true, "coefficient": 0.2},
+        "pni": {"higher_is_better": true, "coefficient": 0.2}
+      },
+      "results": {
+        "lvsa": {"type": "proposed", "An": 10.9, "2in": 12.4, "3in": 18.3, "inp": 8.5, "pin": 7.3, "pni": 8.0},
+        "lvsa_wo_lns": {"type": "proposed", "An": 10.4, "2in": 12.2, "3in": 16.5, "inp": 8.1, "pin": 6.9, "pni": 8.4},
+        "lvsa_wo_lnl": {"type": "proposed", "An": 7.6, "2in": 7.4, "3in": 13.9, "inp": 7.0, "pin": 5.1, "pni": 4.5}
       }
     }
   }

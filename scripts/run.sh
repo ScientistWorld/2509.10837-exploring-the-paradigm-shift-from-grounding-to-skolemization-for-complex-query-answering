@@ -13,5 +13,20 @@ set -e
 
 cd /home/user
 
-bash scripts/reproduce.sh
-bash scripts/ablation.sh
+if [ ! -f outputs/random_predictions.jsonl ]; then
+  bash scripts/baseline.sh
+fi
+
+python method/predict.py \
+  --checkpoint checkpoints/lvsa_synthetic.pt \
+  --out outputs/lvsa_predictions.jsonl
+python method/predict.py \
+  --checkpoint checkpoints/lvsa_no_logic_synthetic.pt \
+  --out outputs/lvsa_no_logic_predictions.jsonl
+
+bash scripts/evaluate.sh \
+  lvsa outputs/lvsa_predictions.jsonl \
+  lvsa_no_logic outputs/lvsa_no_logic_predictions.jsonl \
+  random outputs/random_predictions.jsonl
+
+python validate.py --compare

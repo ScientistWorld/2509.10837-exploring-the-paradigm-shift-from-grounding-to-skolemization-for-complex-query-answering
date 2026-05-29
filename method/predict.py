@@ -33,7 +33,15 @@ def main():
         for row in rows:
             scores = model.scores(row["query"])
             top = torch.topk(scores, k=min(args.topk, scores.numel())).indices.cpu().tolist()
-            f.write(json.dumps({"query": row["query"], "answers": row["answers"], "ranking": top}) + "\n")
+            out_row = {"query": row["query"], "answers": row["answers"], "ranking": top}
+            trace = {}
+            for key, vals in model.trace_scores(row["query"]).items():
+                trace[key.replace("_scores", "_ranking")] = torch.topk(
+                    vals, k=min(args.topk, vals.numel())
+                ).indices.cpu().tolist()
+            if trace:
+                out_row["trace"] = trace
+            f.write(json.dumps(out_row) + "\n")
     elapsed = time.perf_counter() - started
     param_count = sum(p.numel() for p in model.parameters())
     meta_out = {"method": "lvsa", "elapsed_seconds": elapsed, "num_queries": len(rows), "param_count": param_count}
