@@ -25,10 +25,6 @@ efficiency than grounding-based search.
 
 # Problem Definition
 
-What problem does this paper address? Write this so that someone with no knowledge of the paper can understand what needs to be solved and how success is measured.
-
-Do NOT describe the paper's method or solution here — only the problem itself. Think about if a future scientist agent try to solve this problem from scratch without knowing what approach the paper took. If you leak the solution, you compromise the benchmark.
-
 ## Research Question
 
 How can a system answer complex first-order logical queries over an incomplete
@@ -84,8 +80,6 @@ unobservable queries, and yields more interpretable intermediate witnesses.
 
 # Evaluation
 
-How success is measured. Describe only the metrics, targets, and evaluation procedure — do NOT describe the paper's method or how they achieved these results. Think of this as a general evaluation protocal for other scientists trying to solve the same problem, where they should not see this paper's solution.
-
 ## Metrics
 
 Primary accuracy is filtered mean reciprocal rank (MRR): for each correct
@@ -96,12 +90,12 @@ as a resource constraint, where lower is better for comparable accuracy.
 
 ## Baselines and Targets
 
-The paper compares against Skolemization-based CQA methods including CQD-CO,
-BetaE, ConE, LMPNN, and CLMPT, and grounding-based methods including CQD-Beam,
-GNN-QE, ULTRAQ, and QTO. On FB15k-237 the reported LVSA aggregate MRR is 22.4
-and H@1 is 15.4, with particularly strong conjunction and negation results.
-This workspace uses a scaled synthetic CQA benchmark to verify the same
-evaluation behavior without requiring the full standard benchmark download.
+Reference systems for this task include both neural query-embedding approaches
+and search-based logical reasoning approaches. The public-paper reference
+values are recorded in `scoring/reference.json` for context. The runnable gym
+uses a scaled synthetic CQA benchmark with the same output contract and metric
+types, so future methods can be evaluated without requiring the full standard
+benchmark download.
 
 ## Evaluation Protocol
 
@@ -324,6 +318,49 @@ metadata, it must match the fixed test set.
 
 <details>
 <summary>Progress Log</summary>
+
+### [2026-05-29 06:45] - secondary_claims
+- CPU test job `a80ed4a6-a5d` completed successfully after the dependent-Skolemization fix.
+- The job passed the LVSA smoke test, trained the graph-structured LVSA model, trained the no-logic ablation, wrote combined scores, and passed `python validate.py --compare`.
+- Refreshed scaled benchmark results: LVSA MRR 0.4914 versus random MRR 0.0556; negated-query 2in MRR 0.6334 versus 0.5109 for the no-logic ablation.
+- Traceability metrics were produced from method outputs: trace-variable MRR 0.2535, trace-variable P@1 0.1638, and trace-path P@1 0.0703.
+- Restored `secondary_claims` because the verified run now covers the core CQA gain plus the paper's logical-negation and traceability secondary claims in the scaled package.
+
+### [2026-05-29 06:35] - core_claim_plus
+- Reviewed failed CPU test job `5c6ed090-2a1`; stage 1 completed, then stage 2 crashed on an undefined `forward` variable in dependent Skolemization.
+- Fixed `method/lvsa.py` to concatenate `forward_vec` with the backward dependency vector.
+- Added `scripts/smoke.sh` and wired it into `scripts/run.sh` and `scripts/reproduce.sh` so the compute job catches LVSA forward/scoring regressions before training.
+- Resubmitting a CPU test job to retrain and refresh scores.
+
+### [2026-05-29 06:20] - core_claim_plus
+- Continued from the reset `core_claim_plus` milestone and audited method, evaluation, scripts, scoring docs, and environment.
+- Fixed standalone evaluation against legacy prediction artifacts by comparing canonical query identifiers while keeping fixed test labels as the source of truth.
+- Fixed `scripts/reproduce.sh` to run the baseline, LVSA method, no-logic ablation, combined evaluation, and validation.
+- Did not restore `secondary_claims` yet because the current scores predate the graph-structured LVSA encoder change; submitting a CPU retraining job to refresh them.
+
+### [2026-05-29 05:55] - core_claim_plus
+- Hardened the evaluator so fixed test labels are the source of truth and predictions cannot carry their own answers.
+- Reworked LVSA query execution around explicit branch atoms, dependency-order variable materialization, dependent Skolemization, and generic trace scoring.
+- Prepared a compute-side retraining job to refresh the benchmark scores after the implementation audit fixes.
+
+### [2026-05-29 05:32] - core_claim_plus
+- Existing scaled reproduction trains LVSA end-to-end and beats the random baseline on the deterministic CQA benchmark.
+- Existing no-logic ablation shows weaker negated-query performance than the full logical objective.
+
+</details>
+
+### Iteration 8: gpt-5.5 (verifier)
+- **Milestone**: `secondary_claims` | **Status**: done
+- **Working time**: 7m | **GPU**: 0.0h
+- **Jobs**: 7 total (4 completed, 3 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-05-29 06:50] - secondary_claims
+- Final verification preserved the `secondary_claims` milestone.
+- Cleaned method-specific wording from from-scratch-visible documentation and clarified that scaled benchmark reference targets are local gym targets, not paper-published values.
+- Re-ran `python validate.py --compare`, `python validate.py --post-design`, and shell syntax checks for the main scripts; all passed.
 
 ### [2026-05-29 06:45] - secondary_claims
 - CPU test job `a80ed4a6-a5d` completed successfully after the dependent-Skolemization fix.
