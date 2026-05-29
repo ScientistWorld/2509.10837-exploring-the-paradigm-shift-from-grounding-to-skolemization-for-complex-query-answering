@@ -168,7 +168,7 @@ first predicted entity that is a labeled answer determines MRR and Hits@K.
 
 # Reproduction Milestones
 
-**Current: secondary_claims**
+**Current: core_claim_plus**
 
 ## Stop Justification
-- Completed at milestone `secondary_claims`.
+- Completed at milestone `core_claim_plus`.
