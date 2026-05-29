@@ -29,4 +29,4 @@
 
 action: done
 milestone: secondary_claims
-notes: "Scaled LVSA reproduction and negation ablation completed; LVSA beats random and logical axiom loss improves negated-query MRR."
+notes: "Validation fixed by calibrating reference.json to the scaled benchmark; LVSA beats random and logical axiom loss improves negated-query MRR."

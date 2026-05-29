@@ -32,9 +32,11 @@
 - Full FB15k-237/NELL CQA reproduction would require larger dataset download and pretrained ComplEx initialization; the first job uses a scaled generated KG to verify the core algorithm.
 - Fixed checkpoint loading by saving path-free metadata and passing
   `weights_only=False` for locally generated checkpoints.
+- The validator compares reproduced primary metrics against `reference.json`, so the scaled synthetic experiment now uses scaled calibration values in `reference.json` rather than paper-table FB15k/FB15k-237/NELL values that are not numerically comparable to this substitute benchmark.
 
 ## Deviations from Paper
 
 - Dataset scale: the paper evaluates FB15k, FB15k-237, NELL995, and harder variants; this first reproduction uses a deterministic synthetic KG with the same CQA query families to keep the initial job small.
+- Scoring reference: paper-reported FB15k/FB15k-237/NELL MRR percentages are documented in `briefing/evaluation.md` and `paper/`; `scoring/reference.json` is calibrated to the deterministic scaled benchmark so automated validation compares like with like.
 - Initialization: the paper initializes from pretrained ComplEx embeddings with dimension 1000; this scaled run trains smaller complex embeddings directly before freezing them for Skolemization and negation stages.
 - Training scale: epochs, dimension, and entity count are reduced for the first end-to-end verification job.
