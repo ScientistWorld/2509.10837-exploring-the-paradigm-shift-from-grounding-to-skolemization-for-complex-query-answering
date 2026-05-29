@@ -88,7 +88,7 @@ class LVSA(nn.Module):
             vi = self.skolem_independent(inv_rel)
             backward_terms.append(self.project(vi, inv_rel))
         backward = self.normadd(backward_terms) if backward_terms else torch.zeros_like(forward_vec)
-        return self.mlp_d(torch.cat([forward, backward], dim=-1))
+        return self.mlp_d(torch.cat([forward_vec, backward], dim=-1))
 
     def legacy_query_to_branches(self, query: dict):
         qtype = query["type"]

@@ -4,6 +4,12 @@
 
 ## Progress Log
 
+### [2026-05-29 06:35] - core_claim_plus
+- Reviewed failed CPU test job `5c6ed090-2a1`; stage 1 completed, then stage 2 crashed on an undefined `forward` variable in dependent Skolemization.
+- Fixed `method/lvsa.py` to concatenate `forward_vec` with the backward dependency vector.
+- Added `scripts/smoke.sh` and wired it into `scripts/run.sh` and `scripts/reproduce.sh` so the compute job catches LVSA forward/scoring regressions before training.
+- Resubmitting a CPU test job to retrain and refresh scores.
+
 ### [2026-05-29 06:20] - core_claim_plus
 - Continued from the reset `core_claim_plus` milestone and audited method, evaluation, scripts, scoring docs, and environment.
 - Fixed standalone evaluation against legacy prediction artifacts by comparing canonical query identifiers while keeping fixed test labels as the source of truth.

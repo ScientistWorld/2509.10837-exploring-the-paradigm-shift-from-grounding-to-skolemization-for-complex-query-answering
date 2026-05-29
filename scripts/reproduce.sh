@@ -19,6 +19,7 @@ set -e
 cd /home/user
 
 bash scripts/download.sh
+bash scripts/smoke.sh
 bash scripts/baseline.sh
 bash scripts/method.sh
 bash scripts/ablation.sh

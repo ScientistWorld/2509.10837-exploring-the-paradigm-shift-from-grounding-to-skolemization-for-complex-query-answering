@@ -42,6 +42,7 @@
 - Reworked the LVSA encoder after audit so the implementation is identifiable as the paper's sequential Skolemization procedure rather than only a small set of hard-coded query-type branches.
 - Local Python does not include `torch`, so syntax and metadata checks were run locally and the full forward/training verification is delegated to the submitted compute-container job.
 - Continuation audit fixed a standalone evaluation failure caused by comparing derived `branches` metadata exactly, and fixed `scripts/reproduce.sh` so the end-to-end path includes the ablation, final combined evaluation, and `validate.py --compare`.
+- CPU test job `5c6ed090-2a1` failed in stage 2 because `skolem_dependent()` referenced an undefined local variable after the graph-encoder refactor. Fixed the variable name and added `scripts/smoke.sh` to exercise LVSA scoring, tracing, and CE loss before training starts.
 
 ## Deviations from Paper
 
