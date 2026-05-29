@@ -15,4 +15,4 @@
 - Measured trace-variable MRR 0.2419, trace-variable P@1 0.1574, and trace-path P@1 0.0671, extending the scaled reproduction to the paper's interpretability claim.
 
 ## Stop Justification
-- Completed at milestone `secondary_claims` on the scaled reproducible benchmark. Full paper-scale FB15k/FB15k-237/NELL reproduction remains future expansion, but the packaged environment demonstrates the core claim, a negation constraint ablation, and a Skolem traceability analysis with the paper's actual LVSA algorithm.
+- Completed at milestone `secondary_claims`.
