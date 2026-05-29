@@ -19,5 +19,13 @@ set -e
 cd /home/user
 
 bash scripts/download.sh
-python baseline/random_ranker.py --out outputs/random_predictions.jsonl
+bash scripts/baseline.sh
 bash scripts/method.sh
+bash scripts/ablation.sh
+
+bash scripts/evaluate.sh \
+  lvsa outputs/lvsa_predictions.jsonl \
+  lvsa_no_logic outputs/lvsa_no_logic_predictions.jsonl \
+  random outputs/random_predictions.jsonl
+
+python validate.py --compare

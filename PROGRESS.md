@@ -8,6 +8,7 @@
 - LVSA now executes explicit query-graph branches: it materializes intermediate variables in dependency order, applies independent/dependent Skolemization, and emits witness traces for multi-hop variables.
 - `eval/evaluate_predictions.py` scores prediction artifacts without importing method code and reads canonical labels from the fixed test set instead of trusting labels embedded in prediction files.
 - `python validate.py` passes.
+- Continuation audit found `scripts/evaluate.sh` is standalone and import-separated, but existing LVSA prediction artifacts used legacy query metadata while the fixed test data now stores derived query branches. The evaluator now compares only semantic row identifiers (`type`, `anchors`, `relations`) and still reads answers from the canonical test set.
 
 ## Results
 
@@ -27,7 +28,7 @@
 
 - A future expansion could add another synthetic seed, a larger entity count, or public FB15k-237/NELL query files.
 - The current packaged environment is complete for the scaled core claim and the negation ablation.
-- A compute-side retraining job is queued to refresh scores after replacing the per-query-type LVSA branches with graph-structured query execution.
+- A compute-side retraining job is queued to refresh scores after replacing the per-query-type LVSA branches with graph-structured query execution. This is required before restoring the previously claimed `secondary_claims` milestone.
 
 ## Issues
 
@@ -40,6 +41,7 @@
 - Hardened evaluation after audit: prediction files no longer need to contain answers, query labels come from `data/synthetic/test.jsonl`, and methods without traces receive zero traceability credit.
 - Reworked the LVSA encoder after audit so the implementation is identifiable as the paper's sequential Skolemization procedure rather than only a small set of hard-coded query-type branches.
 - Local Python does not include `torch`, so syntax and metadata checks were run locally and the full forward/training verification is delegated to the submitted compute-container job.
+- Continuation audit fixed a standalone evaluation failure caused by comparing derived `branches` metadata exactly, and fixed `scripts/reproduce.sh` so the end-to-end path includes the ablation, final combined evaluation, and `validate.py --compare`.
 
 ## Deviations from Paper
 

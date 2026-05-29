@@ -11,6 +11,15 @@ def read_jsonl(path: Path):
         return [json.loads(line) for line in f]
 
 
+def comparable_query(query: dict):
+    """Return query fields that identify the test row, excluding derived metadata."""
+    return {
+        "type": query.get("type"),
+        "anchors": query.get("anchors"),
+        "relations": query.get("relations"),
+    }
+
+
 def score_rows(pred_rows: list[dict], truth_rows: list[dict], full_entity_count: int):
     if len(pred_rows) != len(truth_rows):
         raise ValueError(f"prediction row count {len(pred_rows)} does not match test row count {len(truth_rows)}")
@@ -19,7 +28,7 @@ def score_rows(pred_rows: list[dict], truth_rows: list[dict], full_entity_count:
     hits10 = []
     by_type = {}
     for idx, (pred, truth) in enumerate(zip(pred_rows, truth_rows)):
-        if "query" in pred and pred["query"] != truth["query"]:
+        if "query" in pred and comparable_query(pred["query"]) != comparable_query(truth["query"]):
             raise ValueError(f"prediction query mismatch at row {idx}")
         answers = set(truth["answers"])
         ranking = list(pred["ranking"])
