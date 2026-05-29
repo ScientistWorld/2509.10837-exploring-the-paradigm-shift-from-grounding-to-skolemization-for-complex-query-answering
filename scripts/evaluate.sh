@@ -15,8 +15,8 @@
 # This file is read by the system for automated comparison.
 #
 # Example usage:
-#   ./evaluate.sh <method_and_run_name>                             # evaluate with defaults
-#   ./evaluate.sh <method_and_run_name> checkpoints/epoch_10.pt     # evaluate a specific checkpoint
+#   bash scripts/evaluate.sh                                        # discover outputs/*_predictions.jsonl
+#   bash scripts/evaluate.sh lvsa outputs/lvsa_predictions.jsonl
 #
 # Called from run.sh after training, or independently.
 
@@ -25,6 +25,23 @@ set -e
 cd /home/user
 
 mkdir -p scoring
+
+if [ "$#" -eq 0 ]; then
+  discovered=()
+  shopt -s nullglob
+  for pred in outputs/*_predictions.jsonl; do
+    base=$(basename "$pred")
+    name=${base%_predictions.jsonl}
+    discovered+=("$name" "$pred")
+  done
+  shopt -u nullglob
+  if [ "${#discovered[@]}" -eq 0 ]; then
+    echo "Usage: bash scripts/evaluate.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
+    echo "No outputs/*_predictions.jsonl files were found for default discovery." >&2
+    exit 2
+  fi
+  set -- "${discovered[@]}"
+fi
 
 if [ "$#" -lt 2 ]; then
   echo "Usage: bash scripts/evaluate.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2

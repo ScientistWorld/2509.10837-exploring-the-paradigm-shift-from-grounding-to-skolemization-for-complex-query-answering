@@ -2,4 +2,4 @@ action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Packaging audit passed: synthetic data is tracked/regenerable, download.sh is self-contained, and committed code has no shared/ path dependencies."
+notes: "Final audit passed after fixing run.sh to regenerate ignored outputs and adding evaluate.sh discovery. Completed scaled core claim plus negation and traceability secondary claims."

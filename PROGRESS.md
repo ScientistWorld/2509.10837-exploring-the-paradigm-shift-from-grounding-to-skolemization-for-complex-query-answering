@@ -10,6 +10,8 @@
 - `python validate.py` passes.
 - Continuation audit found `scripts/evaluate.sh` is standalone and import-separated, but existing LVSA prediction artifacts used legacy query metadata while the fixed test data now stores derived query branches. The evaluator now compares only semantic row identifiers (`type`, `anchors`, `relations`) and still reads answers from the canonical test set.
 - CPU test job `a80ed4a6-a5d` completed `scripts/run.sh` end-to-end in the container: download guard, LVSA smoke test, random baseline, LVSA training, no-logic ablation, combined evaluation, and `validate.py --compare`.
+- Final packaging audit passed locally with `python validate.py --compare`: `eval/` and `data/` remain import-separated from `method/`, committed code has no `shared/` path dependency, and train/test score files are structurally valid.
+- Subagent audit found `scripts/run.sh` depended on ignored prediction artifacts. Fixed it to regenerate the dataset, baseline, LVSA predictions, ablation predictions, standard scores, and train/test gym scores before validation. `scripts/evaluate.sh` now also supports no-argument discovery of prediction artifacts.
 
 ## Results
 
@@ -50,6 +52,6 @@
 
 - Dataset scale: the paper evaluates FB15k, FB15k-237, NELL995, and harder variants; this first reproduction uses a deterministic synthetic KG with the same CQA query families to keep the initial job small.
 - Query coverage: the packaged benchmark covers 1p, 2p, 3p, 2i, and 2in. The encoder accepts explicit branch atoms, but the benchmark does not yet instantiate all 14 query families reported in the paper.
-- Scoring reference: paper-reported FB15k/FB15k-237/NELL MRR percentages are documented in `briefing/evaluation.md` and `paper/`; `scoring/reference.json` is calibrated to the deterministic scaled benchmark so automated validation compares like with like.
+- Scoring reference: paper-reported FB15k-237 values are recorded separately in `scoring/reference.json`; the runnable `scaled_synthetic_cqa` entry records fixed scaled-gym targets so automated validation compares like with like on the substitute benchmark.
 - Initialization: the paper initializes from pretrained ComplEx embeddings with dimension 1000; this scaled run trains smaller complex embeddings directly before freezing them for Skolemization and negation stages.
 - Training scale: epochs, dimension, and entity count are reduced for the first end-to-end verification job.
