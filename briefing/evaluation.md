@@ -1,7 +1,5 @@
 # Evaluation
 
-How success is measured. Describe only the metrics, targets, and evaluation procedure — do NOT describe the paper's method or how they achieved these results. Think of this as a general evaluation protocal for other scientists trying to solve the same problem, where they should not see this paper's solution.
-
 ## Metrics
 
 Primary accuracy is filtered mean reciprocal rank (MRR): for each correct
@@ -12,12 +10,12 @@ as a resource constraint, where lower is better for comparable accuracy.
 
 ## Baselines and Targets
 
-The paper compares against Skolemization-based CQA methods including CQD-CO,
-BetaE, ConE, LMPNN, and CLMPT, and grounding-based methods including CQD-Beam,
-GNN-QE, ULTRAQ, and QTO. On FB15k-237 the reported LVSA aggregate MRR is 22.4
-and H@1 is 15.4, with particularly strong conjunction and negation results.
-This workspace uses a scaled synthetic CQA benchmark to verify the same
-evaluation behavior without requiring the full standard benchmark download.
+Reference systems for this task include both neural query-embedding approaches
+and search-based logical reasoning approaches. The public-paper reference
+values are recorded in `scoring/reference.json` for context. The runnable gym
+uses a scaled synthetic CQA benchmark with the same output contract and metric
+types, so future methods can be evaluated without requiring the full standard
+benchmark download.
 
 ## Evaluation Protocol
 

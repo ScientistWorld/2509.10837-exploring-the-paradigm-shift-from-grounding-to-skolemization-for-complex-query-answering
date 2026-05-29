@@ -2,6 +2,7 @@
   "experiments": {
     "scaled_synthetic_cqa": {
       "description": "Runnable scaled CQA benchmark used by the train/test gym split; no paper table value exists for this generated dataset.",
+      "notes": "These fixed scaled-gym target values come from the completed local reproduction on the deterministic synthetic benchmark. They are not paper-published values; paper-published FB15k-237 references are recorded in separate context experiments below.",
       "weight": 0.98,
       "primary_metric": "mrr",
       "metrics": {

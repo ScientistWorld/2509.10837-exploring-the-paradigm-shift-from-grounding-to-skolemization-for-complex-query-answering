@@ -1,4 +1,4 @@
-"""Synthetic complex-query benchmark for LVSA reproduction.
+"""Synthetic complex-query benchmark for knowledge-graph CQA.
 
 The generator creates a typed directed KG with learnable but non-trivial
 relations. Query files are small JSONL artifacts that can be tracked in git or

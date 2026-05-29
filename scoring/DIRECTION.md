@@ -5,14 +5,13 @@ Improve complex query answering over incomplete knowledge graphs, especially
 queries with existential variables, conjunction, paths, and negation.
 
 ## Core Contribution
-The paper's contribution is in efficient Skolemization-style query embedding
-and logically constrained neural-symbolic operations. Improvements should stay
-within this family: composing entity and relation representations according to
-the query's logical structure.
+Improvements should stay within structured complex-query answering: composing
+entity and relation representations according to the query's logical structure
+while preserving efficient inference and support for negation.
 
 ## Approach Scope
-Work may change the representation space, Skolem function parameterization,
-logical regularization, curriculum, or optimization protocol while preserving
+Work may change the representation space, query-composition operators,
+consistency objectives, curriculum, or optimization protocol while preserving
 structured query execution.
 
 ## Out of Bounds

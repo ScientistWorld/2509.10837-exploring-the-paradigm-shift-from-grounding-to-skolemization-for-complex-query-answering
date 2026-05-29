@@ -4,6 +4,11 @@
 
 ## Progress Log
 
+### [2026-05-29 06:50] - secondary_claims
+- Final verification preserved the `secondary_claims` milestone.
+- Cleaned method-specific wording from from-scratch-visible documentation and clarified that scaled benchmark reference targets are local gym targets, not paper-published values.
+- Re-ran `python validate.py --compare`, `python validate.py --post-design`, and shell syntax checks for the main scripts; all passed.
+
 ### [2026-05-29 06:45] - secondary_claims
 - CPU test job `a80ed4a6-a5d` completed successfully after the dependent-Skolemization fix.
 - The job passed the LVSA smoke test, trained the graph-structured LVSA model, trained the no-logic ablation, wrote combined scores, and passed `python validate.py --compare`.
