@@ -29,6 +29,9 @@
           "mrr_3p": 0.11850445512010668,
           "mrr_2i": 0.026351847311515443,
           "mrr_2in": 0.015852885291310966,
+          "trace_variable_mrr": 0.0,
+          "trace_variable_p1": 0.0,
+          "trace_path_p1": 0.0,
           "param_count_k": 0.0
         },
         "lvsa": {

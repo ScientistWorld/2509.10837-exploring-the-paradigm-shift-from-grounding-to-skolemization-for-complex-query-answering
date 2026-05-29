@@ -24,6 +24,8 @@ Tests whether emitted Skolem intermediate rankings identify entities that can
 serve as valid witnesses for multi-hop query paths.
 - **Metric**: `trace_variable_mrr`, `trace_variable_p1`, `trace_path_p1`
   (higher is better)
+- Methods that do not emit intermediate traces receive zero credit for these
+  metrics while still being scored on answer ranking.
 
 ## Paper References
 `scoring/reference.json` records the paper's FB15k-237 main-result aggregates

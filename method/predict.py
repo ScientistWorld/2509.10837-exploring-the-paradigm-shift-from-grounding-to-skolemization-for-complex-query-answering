@@ -33,7 +33,7 @@ def main():
         for row in rows:
             scores = model.scores(row["query"])
             top = torch.topk(scores, k=min(args.topk, scores.numel())).indices.cpu().tolist()
-            out_row = {"query": row["query"], "answers": row["answers"], "ranking": top}
+            out_row = {"query": row["query"], "ranking": top}
             trace = {}
             for key, vals in model.trace_scores(row["query"]).items():
                 trace[key.replace("_scores", "_ranking")] = torch.topk(

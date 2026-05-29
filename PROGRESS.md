@@ -5,7 +5,8 @@
 - Paper analysis, benchmark scaffolding, scoring metadata, and scripts are in place.
 - `data/synthetic_cqa.py` generates a deterministic complex-query benchmark with 1p, 2p, 3p, 2i, and 2in queries.
 - `method/lvsa.py` implements LVSA's complex embeddings, binding projection, normalized conjunction, differentiable Skolemization modules, and neural negator losses.
-- `eval/evaluate_predictions.py` scores prediction artifacts without importing method code.
+- LVSA now executes explicit query-graph branches: it materializes intermediate variables in dependency order, applies independent/dependent Skolemization, and emits witness traces for multi-hop variables.
+- `eval/evaluate_predictions.py` scores prediction artifacts without importing method code and reads canonical labels from the fixed test set instead of trusting labels embedded in prediction files.
 - `python validate.py` passes.
 
 ## Results
@@ -26,6 +27,7 @@
 
 - A future expansion could add another synthetic seed, a larger entity count, or public FB15k-237/NELL query files.
 - The current packaged environment is complete for the scaled core claim and the negation ablation.
+- A compute-side retraining job is queued to refresh scores after replacing the per-query-type LVSA branches with graph-structured query execution.
 
 ## Issues
 
@@ -35,10 +37,14 @@
   `weights_only=False` for locally generated checkpoints.
 - Audited the scoring metadata and fixed `scoring/reference.json` to contain paper-reported FB15k-237 main-result and negation-ablation values. The scaled synthetic reproduction remains in `scoring/scores.json` under a separate experiment name because it is not numerically comparable to paper-scale FB15k/FB15k-237/NELL results.
 - Fixed the trace-evaluation validation failure by registering the trace metrics in the scaled benchmark's metric schema.
+- Hardened evaluation after audit: prediction files no longer need to contain answers, query labels come from `data/synthetic/test.jsonl`, and methods without traces receive zero traceability credit.
+- Reworked the LVSA encoder after audit so the implementation is identifiable as the paper's sequential Skolemization procedure rather than only a small set of hard-coded query-type branches.
+- Local Python does not include `torch`, so syntax and metadata checks were run locally and the full forward/training verification is delegated to the submitted compute-container job.
 
 ## Deviations from Paper
 
 - Dataset scale: the paper evaluates FB15k, FB15k-237, NELL995, and harder variants; this first reproduction uses a deterministic synthetic KG with the same CQA query families to keep the initial job small.
+- Query coverage: the packaged benchmark covers 1p, 2p, 3p, 2i, and 2in. The encoder accepts explicit branch atoms, but the benchmark does not yet instantiate all 14 query families reported in the paper.
 - Scoring reference: paper-reported FB15k/FB15k-237/NELL MRR percentages are documented in `briefing/evaluation.md` and `paper/`; `scoring/reference.json` is calibrated to the deterministic scaled benchmark so automated validation compares like with like.
 - Initialization: the paper initializes from pretrained ComplEx embeddings with dimension 1000; this scaled run trains smaller complex embeddings directly before freezing them for Skolemization and negation stages.
 - Training scale: epochs, dimension, and entity count are reduced for the first end-to-end verification job.

@@ -13,16 +13,10 @@ set -e
 
 cd /home/user
 
-if [ ! -f outputs/random_predictions.jsonl ]; then
-  bash scripts/baseline.sh
-fi
-
-python method/predict.py \
-  --checkpoint checkpoints/lvsa_synthetic.pt \
-  --out outputs/lvsa_predictions.jsonl
-python method/predict.py \
-  --checkpoint checkpoints/lvsa_no_logic_synthetic.pt \
-  --out outputs/lvsa_no_logic_predictions.jsonl
+bash scripts/download.sh
+bash scripts/baseline.sh
+bash scripts/method.sh
+bash scripts/ablation.sh
 
 bash scripts/evaluate.sh \
   lvsa outputs/lvsa_predictions.jsonl \

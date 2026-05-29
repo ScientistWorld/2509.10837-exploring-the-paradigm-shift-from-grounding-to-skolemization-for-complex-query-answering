@@ -18,6 +18,39 @@ RELATIONS = ["r0", "r1", "r2", "r3"]
 QUERY_TYPES = ["1p", "2p", "3p", "2i", "2in"]
 
 
+def add_query_graph(query: dict):
+    qtype = query["type"]
+    rels = query["relations"]
+    if qtype == "1p":
+        atoms = [{"head": "a0", "rel": rels[0], "tail": "x", "negated": False}]
+    elif qtype == "2p":
+        atoms = [
+            {"head": "a0", "rel": rels[0], "tail": "v1", "negated": False},
+            {"head": "v1", "rel": rels[1], "tail": "x", "negated": False},
+        ]
+    elif qtype == "3p":
+        atoms = [
+            {"head": "a0", "rel": rels[0], "tail": "v1", "negated": False},
+            {"head": "v1", "rel": rels[1], "tail": "v2", "negated": False},
+            {"head": "v2", "rel": rels[2], "tail": "x", "negated": False},
+        ]
+    elif qtype == "2i":
+        atoms = [
+            {"head": "a0", "rel": rels[0], "tail": "x", "negated": False},
+            {"head": "a1", "rel": rels[1], "tail": "x", "negated": False},
+        ]
+    elif qtype == "2in":
+        atoms = [
+            {"head": "a0", "rel": rels[0], "tail": "x", "negated": False},
+            {"head": "a1", "rel": rels[1], "tail": "x", "negated": False},
+            {"head": "a2", "rel": rels[2], "tail": "x", "negated": True},
+        ]
+    else:
+        raise ValueError(f"unsupported query type: {qtype}")
+    query["branches"] = [{"target": "x", "atoms": atoms}]
+    return query
+
+
 def _add_edge(adj, triples, h, r, t):
     adj[r][h].add(t)
     triples.add((h, r, t))
@@ -107,7 +140,7 @@ def sample_queries(adj, num_entities: int, count: int, seed: int):
                 return q, ans, {}
 
         query, answers, aux = _sample_with_answers(rng, num_entities, make)
-        queries.append({"query": query, "answers": answers, "aux": aux})
+        queries.append({"query": add_query_graph(query), "answers": answers, "aux": aux})
     return queries
 
 

@@ -25,3 +25,5 @@ Evaluation reads prediction artifacts produced by a method and scores them
 against fixed test query labels. The evaluator does not import method code or
 regenerate predictions. For each query, predictions are ranked entity IDs; the
 first predicted entity that is a labeled answer determines MRR and Hits@K.
+Prediction files are not trusted as a label source; if they include query
+metadata, it must match the fixed test set.

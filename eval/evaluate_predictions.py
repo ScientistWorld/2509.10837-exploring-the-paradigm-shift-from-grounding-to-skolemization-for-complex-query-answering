@@ -11,26 +11,29 @@ def read_jsonl(path: Path):
         return [json.loads(line) for line in f]
 
 
-def score_file(path: Path, full_entity_count: int):
-    rows = read_jsonl(path)
+def score_rows(pred_rows: list[dict], truth_rows: list[dict], full_entity_count: int):
+    if len(pred_rows) != len(truth_rows):
+        raise ValueError(f"prediction row count {len(pred_rows)} does not match test row count {len(truth_rows)}")
     reciprocal = []
     hits1 = []
     hits10 = []
     by_type = {}
-    for row in rows:
-        answers = set(row["answers"])
-        ranking = list(row["ranking"])
+    for idx, (pred, truth) in enumerate(zip(pred_rows, truth_rows)):
+        if "query" in pred and pred["query"] != truth["query"]:
+            raise ValueError(f"prediction query mismatch at row {idx}")
+        answers = set(truth["answers"])
+        ranking = list(pred["ranking"])
         rank = None
-        for idx, ent in enumerate(ranking, start=1):
+        for rank_idx, ent in enumerate(ranking, start=1):
             if ent in answers:
-                rank = idx
+                rank = rank_idx
                 break
         if rank is None:
             rank = full_entity_count + 1
         reciprocal.append(1.0 / rank)
         hits1.append(1.0 if rank <= 1 else 0.0)
         hits10.append(1.0 if rank <= 10 else 0.0)
-        qtype = row["query"]["type"]
+        qtype = truth["query"]["type"]
         by_type.setdefault(qtype, []).append(1.0 / rank)
     metrics = {
         "mrr": sum(reciprocal) / max(1, len(reciprocal)),
@@ -65,33 +68,33 @@ def rank_of_any(ranking, valid, full_entity_count):
     return full_entity_count + 1
 
 
-def add_trace_metrics(metrics: dict, rows: list[dict], full_entity_count: int, triples_path: Path):
+def add_trace_metrics(metrics: dict, pred_rows: list[dict], truth_rows: list[dict], full_entity_count: int, triples_path: Path):
     if not triples_path.exists():
         return
     adj = load_adjacency(triples_path)
     variable_rr = []
     variable_p1 = []
     path_p1 = []
-    for row in rows:
-        trace = row.get("trace") or {}
-        q = row["query"]
+    for pred, truth in zip(pred_rows, truth_rows):
+        trace = pred.get("trace") or {}
+        q = truth["query"]
         qtype = q["type"]
         rels = q["relations"]
         if qtype == "2p" and "v1_ranking" in trace:
             h = q["anchors"][0]
             valid_v1 = {
                 v1 for v1 in adj[rels[0]].get(h, set())
-                if adj[rels[1]].get(v1, set()) & set(row["answers"])
+                if adj[rels[1]].get(v1, set()) & set(truth["answers"])
             }
             rank = rank_of_any(trace["v1_ranking"], valid_v1, full_entity_count)
             variable_rr.append(1.0 / rank)
             variable_p1.append(1.0 if rank == 1 else 0.0)
             pred_v1 = trace["v1_ranking"][0]
-            pred_answer = row["ranking"][0] if row["ranking"] else None
+            pred_answer = pred["ranking"][0] if pred["ranking"] else None
             path_p1.append(1.0 if pred_v1 in valid_v1 and pred_answer in adj[rels[1]].get(pred_v1, set()) else 0.0)
         elif qtype == "3p" and "v1_ranking" in trace and "v2_ranking" in trace:
             h = q["anchors"][0]
-            answer_set = set(row["answers"])
+            answer_set = set(truth["answers"])
             valid_v2 = {
                 v2 for v1 in adj[rels[0]].get(h, set())
                 for v2 in adj[rels[1]].get(v1, set())
@@ -107,18 +110,24 @@ def add_trace_metrics(metrics: dict, rows: list[dict], full_entity_count: int, t
                 variable_p1.append(1.0 if rank == 1 else 0.0)
             pred_v1 = trace["v1_ranking"][0]
             pred_v2 = trace["v2_ranking"][0]
-            pred_answer = row["ranking"][0] if row["ranking"] else None
+            pred_answer = pred["ranking"][0] if pred["ranking"] else None
             ok = (
                 pred_v1 in adj[rels[0]].get(h, set())
                 and pred_v2 in adj[rels[1]].get(pred_v1, set())
                 and pred_answer in adj[rels[2]].get(pred_v2, set())
             )
             path_p1.append(1.0 if ok else 0.0)
+    has_path_queries = any(row["query"]["type"] in {"2p", "3p"} for row in truth_rows)
     if variable_rr:
         metrics["trace_variable_mrr"] = sum(variable_rr) / len(variable_rr)
         metrics["trace_variable_p1"] = sum(variable_p1) / len(variable_p1)
+    elif has_path_queries:
+        metrics["trace_variable_mrr"] = 0.0
+        metrics["trace_variable_p1"] = 0.0
     if path_p1:
         metrics["trace_path_p1"] = sum(path_p1) / len(path_p1)
+    elif has_path_queries:
+        metrics["trace_path_p1"] = 0.0
 
 
 def main():
@@ -126,6 +135,7 @@ def main():
     parser.add_argument("--predictions", nargs="+", required=True)
     parser.add_argument("--names", nargs="+", required=True)
     parser.add_argument("--meta", type=Path, default=Path("data/synthetic/meta.json"))
+    parser.add_argument("--truth", type=Path, default=Path("data/synthetic/test.jsonl"))
     parser.add_argument("--triples", type=Path, default=Path("data/synthetic/triples.tsv"))
     parser.add_argument("--out", type=Path, default=Path("scoring/scores.json"))
     args = parser.parse_args()
@@ -133,12 +143,13 @@ def main():
         raise SystemExit("--predictions and --names must have equal length")
 
     meta = json.loads(args.meta.read_text())
+    truth_rows = read_jsonl(args.truth)
     results = {}
     for name, pred in zip(args.names, args.predictions):
         path = Path(pred)
         rows = read_jsonl(path)
-        metrics = score_file(path, int(meta["num_entities"]))
-        add_trace_metrics(metrics, rows, int(meta["num_entities"]), args.triples)
+        metrics = score_rows(rows, truth_rows, int(meta["num_entities"]))
+        add_trace_metrics(metrics, rows, truth_rows, int(meta["num_entities"]), args.triples)
         meta_path = path.with_suffix(".meta.json")
         if meta_path.exists():
             run_meta = json.loads(meta_path.read_text())

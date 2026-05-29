@@ -34,6 +34,11 @@ class LVSA(nn.Module):
     def __init__(self, num_entities: int, relations: list[str], dim: int = 64, hidden: int = 128):
         super().__init__()
         self.num_entities = num_entities
+        relations = list(relations)
+        for rel in list(relations):
+            inv = self.inverse_relation(rel)
+            if inv not in relations:
+                relations.append(inv)
         self.relations = relations
         self.rel_to_id = {r: i for i, r in enumerate(relations)}
         self.dim = dim
@@ -45,6 +50,12 @@ class LVSA(nn.Module):
         self.mlp_n_atom = MLP(2 * dim, 2 * dim, hidden)
         nn.init.xavier_uniform_(self.entity.weight)
         nn.init.xavier_uniform_(self.relation.weight)
+
+    @staticmethod
+    def inverse_relation(relation_name: str) -> str:
+        if relation_name.endswith("_inv"):
+            return relation_name[: -len("_inv")]
+        return f"{relation_name}_inv"
 
     def split(self, x):
         return x[..., : self.dim], x[..., self.dim :]
@@ -66,43 +77,124 @@ class LVSA(nn.Module):
         rel_vec = self.relation(rid)
         return self.bind(rel_vec, head_vec)
 
-    def skolem_dependent(self, prev_vec, in_rel: str, out_rel: str):
-        rel_out = self.relation(torch.tensor(self.rel_to_id[out_rel], device=prev_vec.device))
-        vi = self.mlp_i(rel_out)
-        forward = self.project(prev_vec, in_rel)
-        backward = self.project(vi, out_rel)
+    def skolem_independent(self, relation_name: str):
+        rid = torch.tensor(self.rel_to_id[relation_name], device=self.entity.weight.device)
+        return self.mlp_i(self.relation(rid))
+
+    def skolem_dependent(self, forward_vec, successor_relations: list[str]):
+        backward_terms = []
+        for relation_name in successor_relations:
+            inv_rel = self.inverse_relation(relation_name)
+            vi = self.skolem_independent(inv_rel)
+            backward_terms.append(self.project(vi, inv_rel))
+        backward = self.normadd(backward_terms) if backward_terms else torch.zeros_like(forward_vec)
         return self.mlp_d(torch.cat([forward, backward], dim=-1))
 
-    def encode_query(self, query: dict):
+    def legacy_query_to_branches(self, query: dict):
+        qtype = query["type"]
+        rels = query["relations"]
+        if qtype == "1p":
+            atoms = [{"head": "a0", "rel": rels[0], "tail": "x", "negated": False}]
+        elif qtype == "2p":
+            atoms = [
+                {"head": "a0", "rel": rels[0], "tail": "v1", "negated": False},
+                {"head": "v1", "rel": rels[1], "tail": "x", "negated": False},
+            ]
+        elif qtype == "3p":
+            atoms = [
+                {"head": "a0", "rel": rels[0], "tail": "v1", "negated": False},
+                {"head": "v1", "rel": rels[1], "tail": "v2", "negated": False},
+                {"head": "v2", "rel": rels[2], "tail": "x", "negated": False},
+            ]
+        elif qtype == "2i":
+            atoms = [
+                {"head": "a0", "rel": rels[0], "tail": "x", "negated": False},
+                {"head": "a1", "rel": rels[1], "tail": "x", "negated": False},
+            ]
+        elif qtype == "2in":
+            atoms = [
+                {"head": "a0", "rel": rels[0], "tail": "x", "negated": False},
+                {"head": "a1", "rel": rels[1], "tail": "x", "negated": False},
+                {"head": "a2", "rel": rels[2], "tail": "x", "negated": True},
+            ]
+        else:
+            raise ValueError(f"unsupported query type: {qtype}")
+        return [{"target": "x", "atoms": atoms}]
+
+    def query_branches(self, query: dict):
+        return query.get("branches") or self.legacy_query_to_branches(query)
+
+    def encode_branch(self, query: dict, branch: dict, return_trace: bool = False):
         device = self.entity.weight.device
         anchors = torch.tensor(query["anchors"], device=device, dtype=torch.long)
-        rels = query["relations"]
-        qtype = query["type"]
-        if qtype == "1p":
-            return self.project(self.entity(anchors[0]), rels[0])
-        if qtype == "2p":
-            h = self.entity(anchors[0])
-            v1 = self.skolem_dependent(h, rels[0], rels[1])
-            return self.project(v1, rels[1])
-        if qtype == "3p":
-            h = self.entity(anchors[0])
-            v1 = self.skolem_dependent(h, rels[0], rels[1])
-            v2 = self.skolem_dependent(v1, rels[1], rels[2])
-            return self.project(v2, rels[2])
-        if qtype == "2i":
-            return self.normadd([
-                self.project(self.entity(anchors[0]), rels[0]),
-                self.project(self.entity(anchors[1]), rels[1]),
-            ])
-        if qtype == "2in":
-            pos = self.normadd([
-                self.project(self.entity(anchors[0]), rels[0]),
-                self.project(self.entity(anchors[1]), rels[1]),
-            ])
-            neg_atom = self.project(self.entity(anchors[2]), rels[2])
-            neg = self.mlp_n(torch.cat([pos, neg_atom], dim=-1))
-            return self.normadd([pos, neg])
-        raise ValueError(f"unsupported query type: {qtype}")
+        node_vecs = {f"a{i}": self.entity(anchor) for i, anchor in enumerate(anchors)}
+        target = branch.get("target", "x")
+        atoms = branch["atoms"]
+        positive_atoms = [a for a in atoms if not a.get("negated", False)]
+        trace = {}
+
+        # Kahn-style sequential execution: repeatedly materialize variables
+        # whose positive predecessors have already been resolved.
+        while True:
+            progressed = False
+            tails = {
+                atom["tail"]
+                for atom in positive_atoms
+                if atom["tail"] != target and atom["tail"] not in node_vecs
+            }
+            for tail in sorted(tails):
+                incoming = [
+                    atom for atom in positive_atoms
+                    if atom["tail"] == tail and atom["head"] in node_vecs
+                ]
+                unresolved_incoming = [
+                    atom for atom in positive_atoms
+                    if atom["tail"] == tail and atom["head"] not in node_vecs
+                ]
+                if not incoming or unresolved_incoming:
+                    continue
+                forward = self.normadd([self.project(node_vecs[a["head"]], a["rel"]) for a in incoming])
+                successors = [
+                    atom["rel"]
+                    for atom in positive_atoms
+                    if atom["head"] == tail and atom["tail"] not in node_vecs
+                ]
+                node_vecs[tail] = self.skolem_dependent(forward, successors)
+                if return_trace and tail.startswith("v"):
+                    trace[f"{tail}_scores"] = self.score_vec(node_vecs[tail])
+                progressed = True
+            if not progressed:
+                break
+
+        target_positive = [
+            atom for atom in positive_atoms
+            if atom["tail"] == target and atom["head"] in node_vecs
+        ]
+        if not target_positive:
+            unresolved = [
+                atom for atom in positive_atoms
+                if atom["tail"] == target or atom["head"] not in node_vecs
+            ]
+            raise ValueError(f"could not resolve query branch; unresolved atoms: {unresolved}")
+        positive_vec = self.normadd([self.project(node_vecs[a["head"]], a["rel"]) for a in target_positive])
+
+        negated = [
+            atom for atom in atoms
+            if atom.get("negated", False) and atom["tail"] == target and atom["head"] in node_vecs
+        ]
+        if negated:
+            terms = [positive_vec]
+            for atom in negated:
+                neg_atom = self.project(node_vecs[atom["head"]], atom["rel"])
+                terms.append(self.mlp_n(torch.cat([positive_vec, neg_atom], dim=-1)))
+            return self.normadd(terms), trace
+        return positive_vec, trace
+
+    def encode_query(self, query: dict):
+        branch_vecs = [self.encode_branch(query, branch)[0] for branch in self.query_branches(query)]
+        if len(branch_vecs) == 1:
+            return branch_vecs[0]
+        return self.normadd(branch_vecs)
 
     def score_vec(self, qvec):
         er, ei = self.split(self.entity.weight)
@@ -110,23 +202,20 @@ class LVSA(nn.Module):
         return er @ qr + ei @ qi
 
     def scores(self, query: dict):
-        return self.score_vec(self.encode_query(query))
+        branch_scores = [
+            self.score_vec(self.encode_branch(query, branch)[0])
+            for branch in self.query_branches(query)
+        ]
+        if len(branch_scores) == 1:
+            return branch_scores[0]
+        return torch.stack(branch_scores, dim=0).max(dim=0).values
 
     def trace_scores(self, query: dict):
-        device = self.entity.weight.device
-        anchors = torch.tensor(query["anchors"], device=device, dtype=torch.long)
-        rels = query["relations"]
-        qtype = query["type"]
-        if qtype == "2p":
-            h = self.entity(anchors[0])
-            v1 = self.skolem_dependent(h, rels[0], rels[1])
-            return {"v1_scores": self.score_vec(v1)}
-        if qtype == "3p":
-            h = self.entity(anchors[0])
-            v1 = self.skolem_dependent(h, rels[0], rels[1])
-            v2 = self.skolem_dependent(v1, rels[1], rels[2])
-            return {"v1_scores": self.score_vec(v1), "v2_scores": self.score_vec(v2)}
-        return {}
+        traces = {}
+        for branch in self.query_branches(query):
+            _, trace = self.encode_branch(query, branch, return_trace=True)
+            traces.update(trace)
+        return traces
 
     def ce_loss(self, rows):
         losses = []
@@ -144,18 +233,23 @@ class LVSA(nn.Module):
         ax_terms = []
         for row in neg_rows:
             q = row["query"]
-            anchors = torch.tensor(q["anchors"], device=self.entity.weight.device, dtype=torch.long)
-            rels = q["relations"]
-            pos = self.normadd([
-                self.project(self.entity(anchors[0]), rels[0]),
-                self.project(self.entity(anchors[1]), rels[1]),
-            ])
-            atom = self.project(self.entity(anchors[2]), rels[2])
-            neg = self.mlp_n(torch.cat([pos, atom], dim=-1))
-            negneg = self.mlp_n_atom(neg)
+            branch = self.query_branches(q)[0]
+            pos_branch = {
+                "target": branch.get("target", "x"),
+                "atoms": [a for a in branch["atoms"] if not a.get("negated", False)],
+            }
+            pos, _ = self.encode_branch(q, pos_branch)
             target = int(row["answers"][0])
-            sat_terms.append(-F.logsigmoid(self.score_vec(neg)[target]))
-            ax_terms.append(F.mse_loss(negneg, atom) + F.mse_loss(neg, -atom))
+            for atom_def in [a for a in branch["atoms"] if a.get("negated", False)]:
+                anchor_id = int(atom_def["head"][1:]) if atom_def["head"].startswith("a") else None
+                if anchor_id is None:
+                    continue
+                anchor = torch.tensor(q["anchors"][anchor_id], device=self.entity.weight.device)
+                atom = self.project(self.entity(anchor), atom_def["rel"])
+                neg = self.mlp_n(torch.cat([pos, atom], dim=-1))
+                negneg = self.mlp_n_atom(neg)
+                sat_terms.append(-F.logsigmoid(self.score_vec(neg)[target]))
+                ax_terms.append(F.mse_loss(negneg, atom) + F.mse_loss(neg, -atom))
         loss = torch.tensor(0.0, device=self.entity.weight.device)
         if alpha:
             loss = loss + alpha * torch.stack(sat_terms).mean()

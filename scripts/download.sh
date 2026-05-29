@@ -18,4 +18,8 @@ set -e
 
 cd /home/user
 
-python data/synthetic_cqa.py --out data/synthetic --entities 160 --train 3000 --valid 500 --test 700 --seed 7
+if [ -f data/synthetic/train.jsonl ] && [ -f data/synthetic/valid.jsonl ] && [ -f data/synthetic/test.jsonl ] && [ -f data/synthetic/meta.json ]; then
+  echo "Synthetic CQA data already exists; skipping generation."
+else
+  python data/synthetic_cqa.py --out data/synthetic --entities 160 --train 3000 --valid 500 --test 700 --seed 7
+fi

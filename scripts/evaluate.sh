@@ -30,6 +30,10 @@ if [ "$#" -lt 2 ]; then
   echo "Usage: bash scripts/evaluate.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
   exit 2
 fi
+if [ $(( $# % 2 )) -ne 0 ]; then
+  echo "Usage: bash scripts/evaluate.sh expects method/prediction pairs; got an odd number of arguments." >&2
+  exit 2
+fi
 
 names=()
 preds=()

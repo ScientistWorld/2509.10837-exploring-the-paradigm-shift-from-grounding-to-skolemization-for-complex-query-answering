@@ -20,9 +20,8 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.data.open() as src, args.out.open("w") as dst:
         for line in src:
-            row = json.loads(line)
             ranking = rng.sample(entities, k=min(args.topk, len(entities)))
-            dst.write(json.dumps({"query": row["query"], "answers": row["answers"], "ranking": ranking}) + "\n")
+            dst.write(json.dumps({"ranking": ranking}) + "\n")
     args.out.with_suffix(".meta.json").write_text(json.dumps({"method": "random", "param_count": 0}, indent=2) + "\n")
 
 
