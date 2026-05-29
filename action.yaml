@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: pending
+action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: ""
+notes: "Improvements: replaced exact complement split with train/guard/test partition; made runnable synthetic split the weighted gym target; added metric descriptions. Notes: residual visible-answer leakage documented in DESIGN_NOTES.md."

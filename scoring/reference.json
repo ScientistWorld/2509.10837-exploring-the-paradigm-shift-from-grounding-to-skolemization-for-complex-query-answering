@@ -1,22 +1,22 @@
 {
   "experiments": {
     "scaled_synthetic_cqa": {
-      "description": "Runnable scaled substitute benchmark. No paper table value exists for this generated dataset; reproduced scores should be compared within scoring/scores.json against the random baseline and ablation.",
-      "weight": 0.01,
+      "description": "Runnable scaled CQA benchmark used by the train/test gym split; no paper table value exists for this generated dataset.",
+      "weight": 1.0,
       "primary_metric": "mrr",
       "metrics": {
-        "mrr": {"higher_is_better": true, "coefficient": 1.0},
-        "hits1": {"higher_is_better": true, "coefficient": 0.5},
-        "hits10": {"higher_is_better": true, "coefficient": 0.25},
-        "mrr_1p": {"higher_is_better": true, "coefficient": 0.2},
-        "mrr_2p": {"higher_is_better": true, "coefficient": 0.4},
-        "mrr_3p": {"higher_is_better": true, "coefficient": 0.4},
-        "mrr_2i": {"higher_is_better": true, "coefficient": 0.3},
-        "mrr_2in": {"higher_is_better": true, "coefficient": 0.3},
-        "trace_variable_mrr": {"higher_is_better": true, "coefficient": 0.2},
-        "trace_variable_p1": {"higher_is_better": true, "coefficient": 0.2},
-        "trace_path_p1": {"higher_is_better": true, "coefficient": 0.2},
-        "param_count_k": {"higher_is_better": false, "coefficient": -0.1}
+        "mrr": {"higher_is_better": true, "coefficient": 1.0, "description": "Mean reciprocal rank over all synthetic CQA queries."},
+        "hits1": {"higher_is_better": true, "coefficient": 0.5, "description": "Fraction of queries whose first-ranked entity is a correct answer."},
+        "hits10": {"higher_is_better": true, "coefficient": 0.25, "description": "Fraction of queries with a correct answer in the top ten ranked entities."},
+        "mrr_1p": {"higher_is_better": true, "coefficient": 0.2, "description": "Mean reciprocal rank on single-hop path queries."},
+        "mrr_2p": {"higher_is_better": true, "coefficient": 0.4, "description": "Mean reciprocal rank on two-hop path queries."},
+        "mrr_3p": {"higher_is_better": true, "coefficient": 0.4, "description": "Mean reciprocal rank on three-hop path queries."},
+        "mrr_2i": {"higher_is_better": true, "coefficient": 0.3, "description": "Mean reciprocal rank on two-way intersection queries."},
+        "mrr_2in": {"higher_is_better": true, "coefficient": 0.3, "description": "Mean reciprocal rank on intersection queries with negation."},
+        "trace_variable_mrr": {"higher_is_better": true, "coefficient": 0.2, "description": "Mean reciprocal rank for intermediate variable rankings on path queries."},
+        "trace_variable_p1": {"higher_is_better": true, "coefficient": 0.2, "description": "Precision at one for intermediate variable choices on path queries."},
+        "trace_path_p1": {"higher_is_better": true, "coefficient": 0.2, "description": "Fraction of path queries whose top trace forms a valid reasoning path."},
+        "param_count_k": {"higher_is_better": false, "coefficient": -0.1, "description": "Trainable parameter count in thousands, used as a model-size constraint."}
       },
       "results": {
         "random": {
@@ -68,14 +68,14 @@
     },
     "paper_standard_fb15k237": {
       "description": "Paper Table IV/V main-result aggregate on FB15k-237 for Skolemization-based CQA methods. Metrics are percentages reported in the paper.",
-      "weight": 0.69,
+      "weight": 0.0,
       "primary_metric": "mrr_A",
       "metrics": {
-        "mrr_A": {"higher_is_better": true, "coefficient": 1.0},
-        "mrr_Ap": {"higher_is_better": true, "coefficient": 0.5},
-        "mrr_An": {"higher_is_better": true, "coefficient": 0.5},
-        "hits1_A": {"higher_is_better": true, "coefficient": 0.5},
-        "hits1_An": {"higher_is_better": true, "coefficient": 0.3}
+        "mrr_A": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over all FB15k-237 query families."},
+        "mrr_Ap": {"higher_is_better": true, "coefficient": 0.5, "description": "Published MRR over positive FB15k-237 query families."},
+        "mrr_An": {"higher_is_better": true, "coefficient": 0.5, "description": "Published MRR over negated FB15k-237 query families."},
+        "hits1_A": {"higher_is_better": true, "coefficient": 0.5, "description": "Published Hits@1 over all FB15k-237 query families."},
+        "hits1_An": {"higher_is_better": true, "coefficient": 0.3, "description": "Published Hits@1 over negated FB15k-237 query families."}
       },
       "results": {
         "cqd_co": {"type": "baseline", "mrr_A": 13.3, "mrr_Ap": 19.8, "mrr_An": 1.7, "hits1_A": 9.7, "hits1_An": 0.5},
@@ -88,15 +88,15 @@
     },
     "paper_negation_ablation_fb15k237": {
       "description": "Paper Table VII negation-ablation results on FB15k-237. Metrics are MRR percentages for negated query families.",
-      "weight": 0.3,
+      "weight": 0.0,
       "primary_metric": "An",
       "metrics": {
-        "An": {"higher_is_better": true, "coefficient": 1.0},
-        "2in": {"higher_is_better": true, "coefficient": 0.4},
-        "3in": {"higher_is_better": true, "coefficient": 0.4},
-        "inp": {"higher_is_better": true, "coefficient": 0.2},
-        "pin": {"higher_is_better": true, "coefficient": 0.2},
-        "pni": {"higher_is_better": true, "coefficient": 0.2}
+        "An": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over negated FB15k-237 query families."},
+        "2in": {"higher_is_better": true, "coefficient": 0.4, "description": "Published MRR on two-way intersection queries with negation."},
+        "3in": {"higher_is_better": true, "coefficient": 0.4, "description": "Published MRR on three-way intersection queries with negation."},
+        "inp": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on intersection-then-path negated query families."},
+        "pin": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on path-then-intersection negated query families."},
+        "pni": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on path-negation-intersection query families."}
       },
       "results": {
         "lvsa": {"type": "proposed", "An": 10.9, "2in": 12.4, "3in": 18.3, "inp": 8.5, "pin": 7.3, "pni": 8.0},

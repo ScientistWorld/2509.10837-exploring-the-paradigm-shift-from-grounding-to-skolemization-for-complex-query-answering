@@ -25,7 +25,7 @@ def comparable_query(query: dict) -> dict:
 
 
 def split_indices(rows: list[dict]) -> list[int]:
-    """Stratified deterministic half split of the original evaluation pool."""
+    """Visible stratified slice with a guard band before the held-out pool."""
     groups: dict[str, list[tuple[str, int]]] = defaultdict(list)
     for idx, row in enumerate(rows):
         qtype = row["query"]["type"]
@@ -40,7 +40,8 @@ def split_indices(rows: list[dict]) -> list[int]:
     selected = []
     for qtype in sorted(groups):
         ordered = sorted(groups[qtype])
-        selected.extend(idx for pos, (_, idx) in enumerate(ordered) if pos % 2 == 0)
+        cutoff = max(1, (len(ordered) * 2) // 5)
+        selected.extend(idx for _, idx in ordered[:cutoff])
     return sorted(selected)
 
 
