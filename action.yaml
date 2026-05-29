@@ -1,5 +1,5 @@
-action: submit
+action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Run scripts/evaluate_train.sh and scripts/evaluate_test.sh on all discovered prediction artifacts; populate scores_train/test and validate post-design."
+notes: "Stratified hash train/guard/test split; 36 train metrics and 36 test metrics across lvsa, lvsa_no_logic, and random; lvsa MRR train=0.4709 test=0.5061, random stable near 0.051/0.0507; post-design validation passed; caveat: held-out truth remains visible in data/synthetic/test.jsonl as documented."
