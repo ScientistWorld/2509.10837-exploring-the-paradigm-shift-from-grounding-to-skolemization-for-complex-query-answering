@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim_plus**
+**Current: secondary_claims**
 
 ## Progress Log
 
@@ -9,5 +9,10 @@
 - Ran the method, random baseline, and no-logic negation ablation end-to-end through the reusable prediction/evaluation interface.
 - LVSA reached MRR 0.4931 versus random MRR 0.0556; the logic-constrained negator improved negated-query MRR from 0.5047 to 0.6429 at equal parameter count.
 
+### [2026-05-29 05:18] - secondary_claims
+- Added a reusable traceability evaluation for Skolem intermediate rankings on multi-hop queries.
+- Regenerated LVSA and ablation predictions with trace fields on a CPU test job.
+- Measured trace-variable MRR 0.2419, trace-variable P@1 0.1574, and trace-path P@1 0.0671, extending the scaled reproduction to the paper's interpretability claim.
+
 ## Stop Justification
-- Completed at milestone `core_claim_plus` on the scaled reproducible benchmark. Full paper-scale FB15k/FB15k-237/NELL reproduction remains future expansion, but the packaged environment demonstrates the core claim and a negation constraint ablation with the paper's actual LVSA algorithm.
+- Completed at milestone `secondary_claims` on the scaled reproducible benchmark. Full paper-scale FB15k/FB15k-237/NELL reproduction remains future expansion, but the packaged environment demonstrates the core claim, a negation constraint ablation, and a Skolem traceability analysis with the paper's actual LVSA algorithm.

@@ -19,6 +19,12 @@ Tests whether removing explicit logical axiom regularization harms negated
 query answering.
 - **Metric**: `mrr_2in` (higher is better)
 
+## Secondary: scaled_synthetic_cqa Traceability
+Tests whether emitted Skolem intermediate rankings identify entities that can
+serve as valid witnesses for multi-hop query paths.
+- **Metric**: `trace_variable_mrr`, `trace_variable_p1`, `trace_path_p1`
+  (higher is better)
+
 ## Paper References
 `scoring/reference.json` records the paper's FB15k-237 main-result aggregates
 and Table VII negation ablation values. The runnable reproduction in

@@ -13,6 +13,9 @@
         "mrr_3p": {"higher_is_better": true, "coefficient": 0.4},
         "mrr_2i": {"higher_is_better": true, "coefficient": 0.3},
         "mrr_2in": {"higher_is_better": true, "coefficient": 0.3},
+        "trace_variable_mrr": {"higher_is_better": true, "coefficient": 0.2},
+        "trace_variable_p1": {"higher_is_better": true, "coefficient": 0.2},
+        "trace_path_p1": {"higher_is_better": true, "coefficient": 0.2},
         "param_count_k": {"higher_is_better": false, "coefficient": -0.1}
       },
       "results": {
@@ -38,6 +41,9 @@
           "mrr_3p": 0.2521242707721527,
           "mrr_2i": 0.5583174003822817,
           "mrr_2in": 0.6428923800026152,
+          "trace_variable_mrr": 0.24192733426220062,
+          "trace_variable_p1": 0.1574468085106383,
+          "trace_path_p1": 0.0670926517571885,
           "param_count_k": 251.904
         },
         "lvsa_no_logic": {
@@ -50,6 +56,9 @@
           "mrr_3p": 0.2521242707721527,
           "mrr_2i": 0.5583174003822817,
           "mrr_2in": 0.5046817232208834,
+          "trace_variable_mrr": 0.24192733426220062,
+          "trace_variable_p1": 0.1574468085106383,
+          "trace_path_p1": 0.0670926517571885,
           "param_count_k": 251.904
         }
       }
