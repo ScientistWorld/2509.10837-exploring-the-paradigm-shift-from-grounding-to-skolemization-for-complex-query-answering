@@ -9,15 +9,16 @@
 - `eval/evaluate_predictions.py` scores prediction artifacts without importing method code and reads canonical labels from the fixed test set instead of trusting labels embedded in prediction files.
 - `python validate.py` passes.
 - Continuation audit found `scripts/evaluate.sh` is standalone and import-separated, but existing LVSA prediction artifacts used legacy query metadata while the fixed test data now stores derived query branches. The evaluator now compares only semantic row identifiers (`type`, `anchors`, `relations`) and still reads answers from the canonical test set.
+- CPU test job `a80ed4a6-a5d` completed `scripts/run.sh` end-to-end in the container: download guard, LVSA smoke test, random baseline, LVSA training, no-logic ablation, combined evaluation, and `validate.py --compare`.
 
 ## Results
 
 - Random baseline on the scaled benchmark: MRR 0.0556, Hits@1 0.0129, Hits@10 0.1414.
-- LVSA on the scaled benchmark: MRR 0.4931, Hits@1 0.4286, Hits@10 0.6129.
-- Query breakdown: 1p MRR 0.7100, 2p 0.3894, 3p 0.2521, 2i 0.5583, 2in 0.6429.
-- Negation ablation without the logical axiom loss: MRR 0.4748, Hits@1 0.4100, Hits@10 0.5971, and 2in MRR 0.5047.
-- The full negation objective improves 2in MRR by 0.1382 absolute over the no-logic ablation while keeping the same parameter count, supporting the paper's secondary claim that logical constraints improve negated-query behavior.
-- Added Skolem trace evaluation for multi-hop queries. The completed CPU job produced LVSA trace-variable MRR 0.2419, trace-variable P@1 0.1574, and trace-path P@1 0.0671 on the scaled synthetic benchmark, giving a runnable version of the paper's interpretability/causal-traceability analysis.
+- LVSA on the scaled benchmark after the graph-structured encoder retrain: MRR 0.4914, Hits@1 0.4414, Hits@10 0.5929.
+- Query breakdown: 1p MRR 0.7164, 2p 0.3859, 3p 0.2323, 2i 0.5740, 2in 0.6334.
+- Negation ablation without the logical axiom loss: MRR 0.4751, Hits@1 0.4229, Hits@10 0.5843, and 2in MRR 0.5109.
+- The full negation objective improves 2in MRR by 0.1225 absolute over the no-logic ablation while keeping the same 252.416k parameter count, supporting the paper's secondary claim that logical constraints improve negated-query behavior.
+- Added Skolem trace evaluation for multi-hop queries. The completed CPU job produced LVSA trace-variable MRR 0.2535, trace-variable P@1 0.1638, and trace-path P@1 0.0703 on the scaled synthetic benchmark, giving a runnable version of the paper's interpretability/causal-traceability analysis.
 - First CPU job completed all three LVSA training stages and saved a checkpoint,
   but failed during prediction because PyTorch loaded the checkpoint in
   `weights_only` mode.
@@ -28,7 +29,7 @@
 
 - A future expansion could add another synthetic seed, a larger entity count, or public FB15k-237/NELL query files.
 - The current packaged environment is complete for the scaled core claim and the negation ablation.
-- A compute-side retraining job is queued to refresh scores after replacing the per-query-type LVSA branches with graph-structured query execution. This is required before restoring the previously claimed `secondary_claims` milestone.
+- Further milestones would require broadening beyond this scaled package, such as adding the paper's public benchmark query files and more of the reported query families.
 
 ## Issues
 
@@ -43,6 +44,7 @@
 - Local Python does not include `torch`, so syntax and metadata checks were run locally and the full forward/training verification is delegated to the submitted compute-container job.
 - Continuation audit fixed a standalone evaluation failure caused by comparing derived `branches` metadata exactly, and fixed `scripts/reproduce.sh` so the end-to-end path includes the ablation, final combined evaluation, and `validate.py --compare`.
 - CPU test job `5c6ed090-2a1` failed in stage 2 because `skolem_dependent()` referenced an undefined local variable after the graph-encoder refactor. Fixed the variable name and added `scripts/smoke.sh` to exercise LVSA scoring, tracing, and CE loss before training starts.
+- Retry CPU test job `a80ed4a6-a5d` passed after the dependent-Skolemization fix and refreshed the final scores.
 
 ## Deviations from Paper
 

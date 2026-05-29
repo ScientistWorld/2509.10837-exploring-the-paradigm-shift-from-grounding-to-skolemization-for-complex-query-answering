@@ -1,8 +1,15 @@
 # Reproduction Milestones
 
-**Current: core_claim_plus**
+**Current: secondary_claims**
 
 ## Progress Log
+
+### [2026-05-29 06:45] - secondary_claims
+- CPU test job `a80ed4a6-a5d` completed successfully after the dependent-Skolemization fix.
+- The job passed the LVSA smoke test, trained the graph-structured LVSA model, trained the no-logic ablation, wrote combined scores, and passed `python validate.py --compare`.
+- Refreshed scaled benchmark results: LVSA MRR 0.4914 versus random MRR 0.0556; negated-query 2in MRR 0.6334 versus 0.5109 for the no-logic ablation.
+- Traceability metrics were produced from method outputs: trace-variable MRR 0.2535, trace-variable P@1 0.1638, and trace-path P@1 0.0703.
+- Restored `secondary_claims` because the verified run now covers the core CQA gain plus the paper's logical-negation and traceability secondary claims in the scaled package.
 
 ### [2026-05-29 06:35] - core_claim_plus
 - Reviewed failed CPU test job `5c6ed090-2a1`; stage 1 completed, then stage 2 crashed on an undefined `forward` variable in dependent Skolemization.
@@ -26,4 +33,4 @@
 - Existing no-logic ablation shows weaker negated-query performance than the full logical objective.
 
 ## Stop Justification
-- Not stopping this turn; submitting a CPU test job to refresh scores after the implementation and evaluation hardening.
+- Completed at `secondary_claims`. Higher milestones would require reproducing a larger share of the paper's full benchmark matrix, including public FB15k-237/NELL query sets and additional query families beyond the current scaled package.
