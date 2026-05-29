@@ -16,6 +16,8 @@ were emitted and scored from method outputs.
 - **Minor**: `scoring/reference.json` used local scaled benchmark target values
   for `scaled_synthetic_cqa` without an explicit note distinguishing them from
   public-paper table values.
+- **Cosmetic**: Generated Python cache directories were present after local
+  validation runs.
 
 ## Fixes Applied
 - Reworded method-agnostic and method-safe documentation to describe the task,
@@ -25,8 +27,11 @@ were emitted and scored from method outputs.
 - Added a `notes` field to the scaled benchmark reference explaining that its
   target values are deterministic scaled-gym targets, while public-paper
   FB15k-237 values are kept in separate context experiments.
-- Re-ran `python validate.py --compare`, `python validate.py --post-design`,
-  and shell syntax checks for the main scripts; all passed.
+- Removed generated Python cache directories from the workspace.
+- Re-ran `bash scripts/evaluate.sh`, `bash scripts/evaluate_train.sh`,
+  `bash scripts/evaluate_test.sh`, `python validate.py --compare`,
+  `python validate.py --post-design`, and shell syntax checks for the main
+  scripts; all passed.
 
 ## Final Judgment
 The workspace is ready to serve as a research gym in both improve and

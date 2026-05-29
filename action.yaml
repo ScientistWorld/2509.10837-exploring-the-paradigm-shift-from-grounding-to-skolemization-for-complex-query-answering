@@ -2,4 +2,4 @@ action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Continuation audit passed. LVSA reproduction, random baseline, no-logic ablation, trace metrics, train/test scoring, and validation scripts are packaged; milestone remains secondary_claims."
+notes: "Final verification passed: method-agnostic boundaries, reusable evaluation, train/test scoring, and validation checks are ready for gym use."
