@@ -4,6 +4,11 @@
 
 ## Progress Log
 
+### [2026-05-29 06:09] - secondary_claims
+- Continued from the completed `secondary_claims` state and independently checked the paper method summary against the packaged implementation.
+- Re-ran `python validate.py --compare` and `python validate.py --post-design`; both passed.
+- Confirmed the final action remains `done` because the environment already contains a validated LVSA reproduction, baseline, ablation, trace scoring, and reusable scripts.
+
 ### [2026-05-29 06:50] - secondary_claims
 - Final verification preserved the `secondary_claims` milestone.
 - Cleaned method-specific wording from from-scratch-visible documentation and clarified that scaled benchmark reference targets are local gym targets, not paper-published values.

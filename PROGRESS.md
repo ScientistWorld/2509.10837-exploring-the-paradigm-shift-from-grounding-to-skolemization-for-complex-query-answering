@@ -2,6 +2,8 @@
 
 ## What Works
 
+- Continuation audit on 2026-05-29 rechecked the paper's LVSA requirements against `method/lvsa.py`: complex embeddings, Hadamard binding, normalized conjunction, dependency-ordered Skolemization, neural negation, staged training scripts, and trace outputs are present.
+- `python validate.py --compare` and `python validate.py --post-design` pass after the audit.
 - Paper analysis, benchmark scaffolding, scoring metadata, and scripts are in place.
 - `data/synthetic_cqa.py` generates a deterministic complex-query benchmark with 1p, 2p, 3p, 2i, and 2in queries.
 - `method/lvsa.py` implements LVSA's complex embeddings, binding projection, normalized conjunction, differentiable Skolemization modules, and neural negator losses.
