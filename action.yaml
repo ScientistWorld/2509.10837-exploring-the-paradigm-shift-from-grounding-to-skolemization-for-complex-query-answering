@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: pending
-gpus: 1
-test: false
+action: submit
+gpus: 0
+test: true
 milestone: core_claim_plus
-notes: ""
+notes: "Continuation audit fixed standalone evaluation and reproduce.sh; CPU test job retrains LVSA plus no-logic ablation with the graph encoder, then evaluates and validates fresh scores."
