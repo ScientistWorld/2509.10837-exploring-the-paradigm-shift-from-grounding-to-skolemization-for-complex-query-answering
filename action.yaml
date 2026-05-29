@@ -1,9 +1,5 @@
-# This iteration writes files only — do NOT submit compute jobs.
-# Once you set action to 'done', STOP immediately.
-# Do NOT sleep, poll, or wait. The system reads this file
-# only after your turn ends.
-action: done
+action: submit
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Improvements: replaced exact complement split with train/guard/test partition; made runnable synthetic split the dominant weighted gym target; added metric descriptions; fixed validator weight bounds. Notes: residual visible-answer leakage documented in DESIGN_NOTES.md."
+notes: "Run scripts/evaluate_train.sh and scripts/evaluate_test.sh on all discovered prediction artifacts; populate scores_train/test and validate post-design."

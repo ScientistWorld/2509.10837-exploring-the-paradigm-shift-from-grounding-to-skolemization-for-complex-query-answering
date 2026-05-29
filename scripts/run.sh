@@ -1,27 +1,12 @@
 #!/bin/bash
-# Example job script submitted via the end-of-turn YAML block.
-#
-# This runs inside the compute container with:
-#   - Your workspace mounted at /home/user
-#   - GPU(s) available
-#   - No internet access
-#
-# Make sure all data, code, and dependencies are already in the
-# workspace or baked into the container before submitting.
+# Final design-stage job: score the visible train slice and held-out test slice
+# against every discovered prediction artifact under outputs/.
 
 set -e
 
 cd /home/user
 
-bash scripts/download.sh
-bash scripts/smoke.sh
-bash scripts/baseline.sh
-bash scripts/method.sh
-bash scripts/ablation.sh
+bash scripts/evaluate_train.sh
+bash scripts/evaluate_test.sh
 
-bash scripts/evaluate.sh \
-  lvsa outputs/lvsa_predictions.jsonl \
-  lvsa_no_logic outputs/lvsa_no_logic_predictions.jsonl \
-  random outputs/random_predictions.jsonl
-
-python validate.py --compare
+python validate.py --post-design
