@@ -14,3 +14,4 @@ set -e
 cd /home/user
 
 bash scripts/reproduce.sh
+bash scripts/ablation.sh

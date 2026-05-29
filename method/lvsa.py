@@ -140,4 +140,9 @@ class LVSA(nn.Module):
             target = int(row["answers"][0])
             sat_terms.append(-F.logsigmoid(self.score_vec(neg)[target]))
             ax_terms.append(F.mse_loss(negneg, atom) + F.mse_loss(neg, -atom))
-        return alpha * torch.stack(sat_terms).mean() + beta * torch.stack(ax_terms).mean()
+        loss = torch.tensor(0.0, device=self.entity.weight.device)
+        if alpha:
+            loss = loss + alpha * torch.stack(sat_terms).mean()
+        if beta:
+            loss = loss + beta * torch.stack(ax_terms).mean()
+        return loss

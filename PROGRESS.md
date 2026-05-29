@@ -11,16 +11,18 @@
 ## Results
 
 - Random baseline on the scaled benchmark: MRR 0.0556, Hits@1 0.0129, Hits@10 0.1414.
-- LVSA results are pending the submitted compute job.
+- LVSA on the scaled benchmark: MRR 0.4931, Hits@1 0.4286, Hits@10 0.6129.
+- Query breakdown: 1p MRR 0.7100, 2p 0.3894, 3p 0.2521, 2i 0.5583, 2in 0.6429.
 - First CPU job completed all three LVSA training stages and saved a checkpoint,
   but failed during prediction because PyTorch loaded the checkpoint in
   `weights_only` mode.
+- LVSA substantially exceeds the random baseline across all query families, so
+  the scaled reproduction supports the paper's core claim.
 
 ## Remaining
 
-- Run LVSA training end-to-end through `scripts/reproduce.sh`.
-- Inspect `scoring/scores.json` after the job and compare LVSA against the random baseline.
-- If LVSA does not clearly beat the baseline, tune the scaled curriculum or model size while preserving the paper's computation.
+- Run the w/o logical-axiom negation ablation and compare `mrr_2in` against full LVSA.
+- If time allows, add another synthetic seed or a larger entity count for core_claim_plus.
 
 ## Issues
 

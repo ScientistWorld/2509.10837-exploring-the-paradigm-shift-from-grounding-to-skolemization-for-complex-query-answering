@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: none**
+**Current: core_claim**
 
 <!-- Milestone levels (update "Current" above as you progress):
   none             — just started, no meaningful progress yet
@@ -23,6 +23,11 @@
 ### [2026-05-29 05:02] - none
 - CPU test job trained all three LVSA curriculum stages and saved a checkpoint.
 - Prediction failed due to PyTorch checkpoint loading defaults, so the method has not yet run end-to-end without errors.
+
+### [2026-05-29 05:08] - core_claim
+- CPU test job completed end-to-end training, prediction artifact generation, and evaluation.
+- LVSA achieved MRR 0.493 on the scaled CQA benchmark versus 0.056 for random, with clear gains on 2p, 3p, 2i, and 2in queries.
+- Added a planned negation-regularization ablation to pursue a secondary claim.
 
 ## Stop Justification
 - Not stopped.

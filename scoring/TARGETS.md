@@ -9,3 +9,8 @@ queries containing paths, intersections, and negation.
 Tracks model size so improvements cannot come only from unbounded parameter
 scaling.
 - **Metric**: `param_count_k` (lower is better for comparable accuracy)
+
+## Ablation: scaled_synthetic_cqa
+Tests whether removing explicit logical axiom regularization harms negated
+query answering.
+- **Metric**: `mrr_2in` (higher is better)

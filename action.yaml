@@ -30,5 +30,5 @@
 action: submit
 gpus: 0
 test: true
-milestone: none
-notes: "Retry scaled LVSA reproduction after fixing PyTorch checkpoint loading; expect training, prediction, and evaluation to complete."
+milestone: core_claim
+notes: "Run full LVSA plus w/o logical-axiom negation ablation on the scaled CQA benchmark to test a secondary claim."
