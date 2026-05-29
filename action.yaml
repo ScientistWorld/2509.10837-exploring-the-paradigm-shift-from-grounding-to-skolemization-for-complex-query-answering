@@ -1,8 +1,6 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
-gpus: 0
-test: true
-milestone: core_claim_plus
-notes: "Fixed NameError in dependent Skolemization from failed job 5c6ed090-2a1 and added a compute smoke test; retry CPU test retraining/evaluation."
+action: done
+milestone: secondary_claims
+notes: "Verified graph-structured LVSA, no-logic ablation, and trace metrics in CPU test job a80ed4a6-a5d; packaged environment validates."

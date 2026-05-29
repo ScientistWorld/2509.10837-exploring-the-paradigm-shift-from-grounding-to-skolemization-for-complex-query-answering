@@ -33,4 +33,4 @@
 - Existing no-logic ablation shows weaker negated-query performance than the full logical objective.
 
 ## Stop Justification
-- Completed at `secondary_claims`. Higher milestones would require reproducing a larger share of the paper's full benchmark matrix, including public FB15k-237/NELL query sets and additional query families beyond the current scaled package.
+- Completed at milestone `secondary_claims`.
