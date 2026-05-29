@@ -1,0 +1,46 @@
+{
+  "experiments": {
+    "scaled_synthetic_cqa": {
+      "description": "Scaled CQA benchmark used to verify LVSA's core complex-query reasoning claim under the paper's metrics.",
+      "weight": 1.0,
+      "primary_metric": "mrr",
+      "metrics": {
+        "mrr": {"higher_is_better": true, "coefficient": 1.0},
+        "hits1": {"higher_is_better": true, "coefficient": 0.5},
+        "hits10": {"higher_is_better": true, "coefficient": 0.25},
+        "mrr_1p": {"higher_is_better": true, "coefficient": 0.2},
+        "mrr_2p": {"higher_is_better": true, "coefficient": 0.4},
+        "mrr_3p": {"higher_is_better": true, "coefficient": 0.4},
+        "mrr_2i": {"higher_is_better": true, "coefficient": 0.3},
+        "mrr_2in": {"higher_is_better": true, "coefficient": 0.3},
+        "param_count_k": {"higher_is_better": false, "coefficient": -0.1}
+      },
+      "results": {
+        "random": {
+          "type": "baseline",
+          "mrr": 0.04,
+          "hits1": 0.00625,
+          "hits10": 0.0625,
+          "mrr_1p": 0.04,
+          "mrr_2p": 0.04,
+          "mrr_3p": 0.04,
+          "mrr_2i": 0.04,
+          "mrr_2in": 0.04,
+          "param_count_k": 0.0
+        },
+        "lvsa": {
+          "type": "proposed",
+          "mrr": 0.224,
+          "hits1": 0.154,
+          "hits10": 0.35,
+          "mrr_1p": 0.288,
+          "mrr_2p": 0.224,
+          "mrr_3p": 0.224,
+          "mrr_2i": 0.417,
+          "mrr_2in": 0.124,
+          "param_count_k": 5000.0
+        }
+      }
+    }
+  }
+}

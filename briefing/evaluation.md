@@ -4,12 +4,24 @@ How success is measured. Describe only the metrics, targets, and evaluation proc
 
 ## Metrics
 
-<!-- What metrics are used? How are they computed? What does higher/lower mean? -->
+Primary accuracy is filtered mean reciprocal rank (MRR): for each correct
+answer, rank it against non-answer entities and average reciprocal ranks.
+Hits@K reports the fraction of answers ranked in the top K. Higher MRR and
+Hits@K are better. The reusable scaled benchmark also reports parameter count
+as a resource constraint, where lower is better for comparable accuracy.
 
 ## Baselines and Targets
 
-<!-- What performance levels exist as reference points? Include the paper's reported numbers as targets, and any standard baselines. A scientist agent should know what "good" looks like. -->
+The paper compares against Skolemization-based CQA methods including CQD-CO,
+BetaE, ConE, LMPNN, and CLMPT, and grounding-based methods including CQD-Beam,
+GNN-QE, ULTRAQ, and QTO. On FB15k-237 the reported LVSA aggregate MRR is 22.4
+and H@1 is 15.4, with particularly strong conjunction and negation results.
+This workspace uses a scaled synthetic CQA benchmark to verify the same
+evaluation behavior without requiring the full standard benchmark download.
 
 ## Evaluation Protocol
 
-<!-- How should evaluation be run? What data split, what conditions? Any important details about how to compare fairly (e.g., fixed seeds, specific test sets, averaging over runs). -->
+Evaluation reads prediction artifacts produced by a method and scores them
+against fixed test query labels. The evaluator does not import method code or
+regenerate predictions. For each query, predictions are ranked entity IDs; the
+first predicted entity that is a labeled answer determines MRR and Hits@K.

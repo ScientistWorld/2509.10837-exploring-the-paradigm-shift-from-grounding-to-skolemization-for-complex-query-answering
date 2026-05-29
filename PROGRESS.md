@@ -2,36 +2,30 @@
 
 ## What Works
 
-<!-- What has been successfully reproduced so far. -->
+- Paper analysis, benchmark scaffolding, scoring metadata, and scripts are in place.
+- `data/synthetic_cqa.py` generates a deterministic complex-query benchmark with 1p, 2p, 3p, 2i, and 2in queries.
+- `method/lvsa.py` implements LVSA's complex embeddings, binding projection, normalized conjunction, differentiable Skolemization modules, and neural negator losses.
+- `eval/evaluate_predictions.py` scores prediction artifacts without importing method code.
+- `python validate.py` passes.
 
 ## Results
 
-<!-- Reproduced numbers compared to the paper's reported numbers. -->
+- Random baseline on the scaled benchmark: MRR 0.0556, Hits@1 0.0129, Hits@10 0.1414.
+- LVSA results are pending the submitted compute job.
 
 ## Remaining
 
-<!-- What still needs to be done to reach higher milestones. -->
+- Run LVSA training end-to-end through `scripts/reproduce.sh`.
+- Inspect `scoring/scores.json` after the job and compare LVSA against the random baseline.
+- If LVSA does not clearly beat the baseline, tune the scaled curriculum or model size while preserving the paper's computation.
 
 ## Issues
 
-<!-- Blockers, bugs, or difficulties encountered. -->
+- The paper markdown and web search did not reveal an LVSA code release.
+- Full FB15k-237/NELL CQA reproduction would require larger dataset download and pretrained ComplEx initialization; the first job uses a scaled generated KG to verify the core algorithm.
 
 ## Deviations from Paper
 
-<!-- Do not edit this section unless you deviated from the paper's original setup.
-     For each deviation, document: what the paper used, what you substituted, and why.
-
-     ACCEPTABLE deviations (data/resource/scale substitutions — milestones still valid):
-       - Replaced a proprietary dataset with a public one
-       - Used a smaller model of the same architecture
-       - Scaled down training (fewer epochs, smaller batch)
-       - Used a different library for the same algorithm
-
-     UNACCEPTABLE deviations (algorithm substitutions — milestones above 'none' are void):
-       - Replaced the paper's algorithm with a fundamentally different one
-       - Wrote a generic model trained to approximate the method's outputs
-         instead of implementing the method's computational steps
-
-     The test: could someone reading your code identify which algorithm from
-     the paper you implemented? If not, you replaced the method. -->
-
+- Dataset scale: the paper evaluates FB15k, FB15k-237, NELL995, and harder variants; this first reproduction uses a deterministic synthetic KG with the same CQA query families to keep the initial job small.
+- Initialization: the paper initializes from pretrained ComplEx embeddings with dimension 1000; this scaled run trains smaller complex embeddings directly before freezing them for Skolemization and negation stages.
+- Training scale: epochs, dimension, and entity count are reduced for the first end-to-end verification job.

@@ -17,4 +17,9 @@ set -e
 
 cd /home/user
 
-# TODO: run baseline
+if [ ! -f data/synthetic/test.jsonl ]; then
+  bash scripts/download.sh
+fi
+
+python baseline/random_ranker.py --out outputs/random_predictions.jsonl
+bash scripts/evaluate.sh random outputs/random_predictions.jsonl

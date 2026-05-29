@@ -1,0 +1,16 @@
+{
+  "num_entities": 160,
+  "relations": [
+    "r0",
+    "r1",
+    "r2",
+    "r3"
+  ],
+  "query_types": [
+    "1p",
+    "2p",
+    "3p",
+    "2i",
+    "2in"
+  ]
+}

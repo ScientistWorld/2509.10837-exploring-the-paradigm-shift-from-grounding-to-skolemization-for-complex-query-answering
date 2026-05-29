@@ -26,5 +26,17 @@ cd /home/user
 
 mkdir -p scoring
 
-# TODO: implement evaluation using code in eval/
-# Must write scoring/scores.json at the end
+if [ "$#" -lt 2 ]; then
+  echo "Usage: bash scripts/evaluate.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
+  exit 2
+fi
+
+names=()
+preds=()
+while [ "$#" -gt 0 ]; do
+  names+=("$1")
+  preds+=("$2")
+  shift 2
+done
+
+python eval/evaluate_predictions.py --names "${names[@]}" --predictions "${preds[@]}" --out scoring/scores.json

@@ -15,7 +15,10 @@
 
 ## Progress Log
 
-<!-- Write your progress here -->
+### [2026-05-29 04:55] - none
+- Read the paper and extracted LVSA's required computation: complex vector binding, normalized bundling, differentiable Skolemization, neural negator, and curriculum losses.
+- Implemented the scaled benchmark generator, LVSA method code, random baseline, artifact-based evaluator, scoring contract, and reproducibility scripts.
+- Validation passes locally; the LVSA training run has not completed yet, so the milestone remains `none`.
 
 ## Stop Justification
-- Completed at milestone `none`.
+- Not stopped.
