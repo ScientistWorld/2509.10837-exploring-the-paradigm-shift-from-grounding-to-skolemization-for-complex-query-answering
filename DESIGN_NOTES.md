@@ -15,7 +15,7 @@
   - `eval/train/evaluate.py` now scores the first 40 percent of each query-type hash ordering.
   - `eval/test/evaluate.py` now scores the last 40 percent of each query-type hash ordering.
   - The middle 20 percent is unscored guard data. This makes the visible train split less directly informative about the hidden test slice and reduces complement-overfitting pressure while preserving similar query-type coverage.
-- Reweighted `scoring/reference.json` so the runnable synthetic CQA split is the scored gym target (`weight: 1.0`) and static paper-table context experiments have zero weight. The previous weights let non-runnable reference tables dominate the train/test gym signal.
+- Reweighted `scoring/reference.json` so the runnable synthetic CQA split is the dominant scored gym target (`weight: 0.98`) and static paper-table context experiments have only minimal validator-compatible weight (`0.01` each). The previous weights let non-runnable reference tables dominate the train/test gym signal.
 - Added required `description` fields to every metric entry in `scoring/reference.json`, including the static context metrics.
 
 ## Runtime Concerns For The Runner Iteration

@@ -6,4 +6,4 @@ action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Improvements: replaced exact complement split with train/guard/test partition; made runnable synthetic split the weighted gym target; added metric descriptions. Notes: residual visible-answer leakage documented in DESIGN_NOTES.md."
+notes: "Improvements: replaced exact complement split with train/guard/test partition; made runnable synthetic split the dominant weighted gym target; added metric descriptions; fixed validator weight bounds. Notes: residual visible-answer leakage documented in DESIGN_NOTES.md."

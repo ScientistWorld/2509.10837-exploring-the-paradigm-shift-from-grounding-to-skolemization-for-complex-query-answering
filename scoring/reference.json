@@ -2,7 +2,7 @@
   "experiments": {
     "scaled_synthetic_cqa": {
       "description": "Runnable scaled CQA benchmark used by the train/test gym split; no paper table value exists for this generated dataset.",
-      "weight": 1.0,
+      "weight": 0.98,
       "primary_metric": "mrr",
       "metrics": {
         "mrr": {"higher_is_better": true, "coefficient": 1.0, "description": "Mean reciprocal rank over all synthetic CQA queries."},
@@ -68,7 +68,7 @@
     },
     "paper_standard_fb15k237": {
       "description": "Paper Table IV/V main-result aggregate on FB15k-237 for Skolemization-based CQA methods. Metrics are percentages reported in the paper.",
-      "weight": 0.0,
+      "weight": 0.01,
       "primary_metric": "mrr_A",
       "metrics": {
         "mrr_A": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over all FB15k-237 query families."},
@@ -88,7 +88,7 @@
     },
     "paper_negation_ablation_fb15k237": {
       "description": "Paper Table VII negation-ablation results on FB15k-237. Metrics are MRR percentages for negated query families.",
-      "weight": 0.0,
+      "weight": 0.01,
       "primary_metric": "An",
       "metrics": {
         "An": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over negated FB15k-237 query families."},
