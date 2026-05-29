@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: done
+action: pending
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Stratified 50/50 query-family split over synthetic CQA eval pool; 12 train metrics, 12 test metrics; scripts written, scores produced later."
+notes: ""
