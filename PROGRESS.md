@@ -13,6 +13,8 @@
 - Random baseline on the scaled benchmark: MRR 0.0556, Hits@1 0.0129, Hits@10 0.1414.
 - LVSA on the scaled benchmark: MRR 0.4931, Hits@1 0.4286, Hits@10 0.6129.
 - Query breakdown: 1p MRR 0.7100, 2p 0.3894, 3p 0.2521, 2i 0.5583, 2in 0.6429.
+- Negation ablation without the logical axiom loss: MRR 0.4748, Hits@1 0.4100, Hits@10 0.5971, and 2in MRR 0.5047.
+- The full negation objective improves 2in MRR by 0.1382 absolute over the no-logic ablation while keeping the same parameter count, supporting the paper's secondary claim that logical constraints improve negated-query behavior.
 - First CPU job completed all three LVSA training stages and saved a checkpoint,
   but failed during prediction because PyTorch loaded the checkpoint in
   `weights_only` mode.
@@ -21,8 +23,8 @@
 
 ## Remaining
 
-- Run the w/o logical-axiom negation ablation and compare `mrr_2in` against full LVSA.
-- If time allows, add another synthetic seed or a larger entity count for core_claim_plus.
+- A future expansion could add another synthetic seed, a larger entity count, or public FB15k-237/NELL query files.
+- The current packaged environment is complete for the scaled core claim and the negation ablation.
 
 ## Issues
 

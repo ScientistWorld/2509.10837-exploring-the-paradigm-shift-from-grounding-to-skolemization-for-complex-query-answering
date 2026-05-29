@@ -27,8 +27,6 @@
 #   milestone: core_claim
 #   notes: "Reproduced the core claim. Environment packaged."
 
-action: submit
-gpus: 0
-test: true
-milestone: core_claim
-notes: "Run full LVSA plus w/o logical-axiom negation ablation on the scaled CQA benchmark to test a secondary claim."
+action: done
+milestone: secondary_claims
+notes: "Scaled LVSA reproduction and negation ablation completed; LVSA beats random and logical axiom loss improves negated-query MRR."
