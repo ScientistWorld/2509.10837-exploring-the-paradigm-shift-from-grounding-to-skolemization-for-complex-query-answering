@@ -20,5 +20,9 @@
 - Implemented the scaled benchmark generator, LVSA method code, random baseline, artifact-based evaluator, scoring contract, and reproducibility scripts.
 - Validation passes locally; the LVSA training run has not completed yet, so the milestone remains `none`.
 
+### [2026-05-29 05:02] - none
+- CPU test job trained all three LVSA curriculum stages and saved a checkpoint.
+- Prediction failed due to PyTorch checkpoint loading defaults, so the method has not yet run end-to-end without errors.
+
 ## Stop Justification
 - Not stopped.

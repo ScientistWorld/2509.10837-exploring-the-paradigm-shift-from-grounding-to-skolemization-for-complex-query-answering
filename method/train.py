@@ -71,7 +71,8 @@ def main():
     train_stage(model, neg, neg_params, args.lr, args.epochs_stage3, args.batch_size, args.seed + 200, neg=True)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"model": model.state_dict(), "meta": meta, "args": vars(args)}, args.out)
+    saved_args = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
+    torch.save({"model": model.state_dict(), "meta": meta, "args": saved_args}, args.out)
     print(f"saved {args.out}", flush=True)
 
 

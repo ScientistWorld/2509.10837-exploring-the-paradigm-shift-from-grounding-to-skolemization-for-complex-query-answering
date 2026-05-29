@@ -12,6 +12,9 @@
 
 - Random baseline on the scaled benchmark: MRR 0.0556, Hits@1 0.0129, Hits@10 0.1414.
 - LVSA results are pending the submitted compute job.
+- First CPU job completed all three LVSA training stages and saved a checkpoint,
+  but failed during prediction because PyTorch loaded the checkpoint in
+  `weights_only` mode.
 
 ## Remaining
 
@@ -23,6 +26,8 @@
 
 - The paper markdown and web search did not reveal an LVSA code release.
 - Full FB15k-237/NELL CQA reproduction would require larger dataset download and pretrained ComplEx initialization; the first job uses a scaled generated KG to verify the core algorithm.
+- Fixed checkpoint loading by saving path-free metadata and passing
+  `weights_only=False` for locally generated checkpoints.
 
 ## Deviations from Paper
 

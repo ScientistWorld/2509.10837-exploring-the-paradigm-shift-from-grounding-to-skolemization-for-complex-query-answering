@@ -31,4 +31,4 @@ action: submit
 gpus: 0
 test: true
 milestone: none
-notes: "Run the full scaled LVSA reproduction pipeline on CPU to verify method training, prediction artifact generation, and evaluation."
+notes: "Retry scaled LVSA reproduction after fixing PyTorch checkpoint loading; expect training, prediction, and evaluation to complete."

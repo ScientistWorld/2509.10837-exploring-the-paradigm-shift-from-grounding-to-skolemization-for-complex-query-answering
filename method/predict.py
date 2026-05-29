@@ -18,7 +18,9 @@ def main():
     parser.add_argument("--topk", type=int, default=20)
     args = parser.parse_args()
 
-    ckpt = torch.load(args.checkpoint, map_location="cpu")
+    # Checkpoints are produced locally by method/train.py in this workspace.
+    # Explicit weights_only=False keeps compatibility with PyTorch >= 2.6.
+    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     meta = ckpt["meta"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = LVSA(meta["num_entities"], meta["relations"], ckpt["args"]["dim"], ckpt["args"]["hidden"]).to(device)
