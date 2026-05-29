@@ -2,4 +2,4 @@ action: done
 gpus: 0
 test: false
 milestone: secondary_claims
-notes: "Stratified hash train/guard/test split; 36 train metrics and 36 test metrics across lvsa, lvsa_no_logic, and random; lvsa MRR train=0.4709 test=0.5061, random stable near 0.051/0.0507; post-design validation passed; caveat: held-out truth remains visible in data/synthetic/test.jsonl as documented."
+notes: "Packaging audit passed: synthetic data is tracked/regenerable, download.sh is self-contained, and committed code has no shared/ path dependencies."
