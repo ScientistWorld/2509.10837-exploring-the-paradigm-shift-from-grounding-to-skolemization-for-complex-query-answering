@@ -11,4 +11,5 @@ for case in CASES:
     print('\nAUDIT CASE:', case, flush=True)
     subprocess.run(['bash', f'redteam/{case}/run.sh'], check=True)
 PY
+python -m redteam.data_checks
 python redteam/summarize.py

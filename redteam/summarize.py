@@ -90,7 +90,10 @@ lines = ['| Run | MRR | Hits@1 | Trace MRR | Trace path P@1 | Params k | Rank de
          '|---|---:|---:|---:|---:|---:|---:|---:|']
 for name, result in attempts.items():
     def value(v):
-        return 'undefined' if v is None else f'{v:.6f}'
+        if v is None:
+            return 'undefined'
+        # Preserve a small positive shortcut gain instead of printing a tie.
+        return f'{v:.6e}' if 0 < abs(v) < 0.000001 else f'{v:.6f}'
     lines.append('| '+name+' | '+' | '.join(value(result.get(k)) for k in
         ['mrr', 'hits1', 'trace_variable_mrr', 'trace_path_p1', 'param_count_k'])+' | '+
         ' | '.join(value(rankings[c]['delta_vs_existing_test_reference'][name]) for c in ['all_finite', 'honest'])+' |')

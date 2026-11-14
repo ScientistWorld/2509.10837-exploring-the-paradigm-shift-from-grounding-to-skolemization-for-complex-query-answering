@@ -1,0 +1,293 @@
+[
+  {
+    "job_id": "11cee678-5fe",
+    "exit_code": 0,
+    "resource": "CPU, gpus=0",
+    "case_results": [
+      {
+        "candidate": "reference_existing",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.3887542259762995,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "reference_seed11",
+        "num_queries": 700,
+        "training": {
+          "seed": 11,
+          "stage1": 18,
+          "stage2": 18,
+          "stage3": 10
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 76.9727104770136,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "reference_seed12",
+        "num_queries": 700,
+        "training": {
+          "seed": 12,
+          "stage1": 18,
+          "stage2": 18,
+          "stage3": 10
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 56.556761501997244,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "reference_seed13",
+        "num_queries": 700,
+        "training": {
+          "seed": 13,
+          "stage1": 18,
+          "stage2": 18,
+          "stage3": 10
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 57.119769761979114,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "better_more_training",
+        "num_queries": 700,
+        "training": {
+          "seed": 11,
+          "stage1": 54,
+          "stage2": 54,
+          "stage3": 30
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 150.79266815900337,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "weaker_no_path_training",
+        "num_queries": 700,
+        "training": {
+          "seed": 11,
+          "stage1": 18,
+          "stage2": 0,
+          "stage3": 10
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 27.635809821018483,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "weaker_random",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.5307659499812871,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "ablation_existing",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.4123446079902351,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_label_copy",
+        "num_queries": 700,
+        "elapsed_seconds": 0.009107863996177912,
+        "ranked_answers": 700,
+        "all_labeled_answers": 1817,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.43940723198466003,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_rebuild_answers",
+        "num_queries": 700,
+        "elapsed_seconds": 0.00968632596777752,
+        "ranked_answers": 1817,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.5222075159545057,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_bruteforce",
+        "num_queries": 700,
+        "elapsed_seconds": 0.610409325978253,
+        "ranked_answers": 1817,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.9717046460136771,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_metadata_zero",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.38601583702256903,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_metadata_negative",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.3829161190078594,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_selective_traces",
+        "num_queries": 700,
+        "emitted_path_traces": 75,
+        "total_path_queries": 313,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.37052911502541974,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_graph_replace",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 4.257857660995796,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_ground_truth_constant",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.38819760299520567,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_reported_fields",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.3914486520225182,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_empty",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.4084341679699719,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_null",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 1,
+        "total_seconds": 0.4298419859842397,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_nonfinite",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.38969855703180656,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "shortcut_hide_failure",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.3996925450046547,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl",
+          "shortcut_failed_predictions.jsonl"
+        ]
+      }
+    ]
+  },
+  {
+    "job_id": "8aa850d0-5b2",
+    "exit_code": 0,
+    "resource": "CPU, gpus=0",
+    "case_results": [
+      {
+        "candidate": "better_graph_pretraining",
+        "num_queries": 700,
+        "training": {
+          "seed": 11,
+          "stage1": 200,
+          "stage2": 60,
+          "stage3": 30,
+          "stage1_data": "provided graph triples and their inverse relations; no test answers"
+        },
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 154.24936316302046,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      },
+      {
+        "candidate": "weaker_constant",
+        "num_queries": 700,
+        "train_exit_code": 0,
+        "test_exit_code": 0,
+        "total_seconds": 0.3375770060229115,
+        "prediction_files_on_disk": [
+          "candidate_predictions.jsonl"
+        ]
+      }
+    ]
+  }
+]

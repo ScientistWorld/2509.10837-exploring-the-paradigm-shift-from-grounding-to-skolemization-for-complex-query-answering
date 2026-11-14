@@ -1,0 +1,28 @@
+{
+  "case_count": 23,
+  "successful_hidden_tests": 22,
+  "deliberately_failed_hidden_tests": [
+    "shortcut_null"
+  ],
+  "all_case_shell_scripts_valid": true,
+  "all_audit_python_sources_parse": true,
+  "runner_managed_paths_restored_to_initial_snapshot": {
+    "data/synthetic": true,
+    "outputs": true,
+    "tmp": true,
+    "scoring/scores_train.json": true,
+    "scoring/scores_test.json": true
+  },
+  "protected_tracked_directories_equal_initial_git_commit": [
+    "baseline",
+    "briefing",
+    "data",
+    "environment",
+    "eval",
+    "method",
+    "scoring",
+    "scripts",
+    "paper"
+  ],
+  "base_commit": "64502041fbc8deff57875f062626645cc79db5b5"
+}

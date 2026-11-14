@@ -1,4 +1,2 @@
-action: submit
-gpus: 0
-test: false
-notes: "Follow-up audit: stronger LVSA graph/inverse pretraining, canonical constant-output baseline, and data-effect diagnostics; then recompute normalized audit ranks"
+action: done
+notes: "Completed 23-case gym audit: genuine quality ordering, three-seed spread, nine paying shortcuts, task-fidelity failures, and restored gym files"

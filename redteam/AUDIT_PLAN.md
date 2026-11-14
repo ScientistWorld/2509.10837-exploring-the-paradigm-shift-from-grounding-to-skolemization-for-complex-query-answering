@@ -5,10 +5,14 @@ records pre-existing harness changes. Audit source and evidence stay here.
 Only the scheduler entrypoint and action file are temporarily changed outside
 this directory. Each case restores the original data and scoring artifacts.
 
-The bundle reruns the original predictions, trains the reference at seeds
+The completed 23-case bundle reruns the original predictions, trains the reference at seeds
 11/12/13, trains for three times as many epochs at seed 11, and removes stage-2
 training as a deliberately weaker method. It also reruns the random baseline
-and saved negation ablation. Every candidate reaches the hidden test via its
+and saved negation ablation. A follow-up trains the same LVSA architecture on
+all provided observed graph triples, including inverse relations, before the
+original path and negation stages; it also checks a constant answer baseline.
+Data diagnostics check graph observability, whether negation changes answers,
+multiple-answer coverage, and repeated training queries. Every candidate reaches the hidden test via its
 own no-argument shell invocation, with no evaluator or environment tampering.
 
 Shortcut trials: visible-label copying; deterministic graph reconstruction;
@@ -18,6 +22,6 @@ replacing truth labels with a constant; claimed scores and success flags with
 invalid entity rankings; empty outputs and missing metadata; null metadata;
 and omitting a failed on-disk method from the public evaluation manifest.
 
-All reported leaderboard differences will disclose the cohort used to
+All reported leaderboard differences disclose the cohort used to
 normalize each metric. The future ranking population is not available, so no
 single absolute audit score can represent every possible future leaderboard.

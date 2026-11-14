@@ -16,6 +16,13 @@ cases generate a seed-11 reference from visible method code and reuse its
 predictions. Cases called `shortcut_*` deliberately demonstrate scoring
 shortcuts; they are not proposed scientific improvements.
 
+There are 23 executed cases: ten quality/reproduction checks and thirteen
+shortcut trials. The two submitted CPU bundles completed successfully; one
+deliberately invalid candidate (`shortcut_null`) failed its hidden test, as
+recorded in its `run_result.json` and `failure_evidence.txt`. Each successful
+case retains its actual hidden-test score file. `data_checks.json` records the
+data-effect checks. The final interpretation is in `../REDTEAM.md`.
+
 `summarize.py` is analysis code, separate from candidate construction. It uses
 the hidden outputs and metric definitions only after each hidden-test run.
 It reports signed rank differences relative to the existing test reference
