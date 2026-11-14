@@ -1,54 +1,16 @@
 #!/bin/bash
-# Visible train-slice evaluator for the research gym.
+# Train-side (public validation) evaluation of every method on disk.
 #
-# Usage mirrors scripts/evaluate.sh:
-#   bash scripts/evaluate_train.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]
+# Usage: bash scripts/evaluate_train.sh        (no arguments)
 #
-# With no arguments, the script discovers outputs/*_predictions.jsonl and
-# evaluates every discovered method. It writes scoring/scores_train.json.
+# Every directory under outputs/ is a method and is scored from its raw ranked
+# lists outputs/<method>/valid_std.npz and outputs/<method>/valid_hplus.npz
+# (format: see briefing/evaluation.md). A method whose files are missing or
+# invalid is still listed, with worst values. Writes scoring/scores_train.json.
 
-set -e
+set -euo pipefail
 
-cd /home/user
+cd "$(dirname "$0")/.."
 
-mkdir -p scoring tmp
-
-if [ "$#" -eq 0 ]; then
-  discovered=()
-  shopt -s nullglob
-  for pred in outputs/*_predictions.jsonl; do
-    base=$(basename "$pred")
-    name=${base%_predictions.jsonl}
-    discovered+=("$name" "$pred")
-  done
-  shopt -u nullglob
-  if [ "${#discovered[@]}" -eq 0 ]; then
-    echo "Usage: bash scripts/evaluate_train.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
-    echo "No outputs/*_predictions.jsonl files were found for default discovery." >&2
-    exit 2
-  fi
-  set -- "${discovered[@]}"
-fi
-
-if [ "$#" -lt 2 ]; then
-  echo "Usage: bash scripts/evaluate_train.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
-  exit 2
-fi
-if [ $(( $# % 2 )) -ne 0 ]; then
-  echo "Usage: bash scripts/evaluate_train.sh expects method/prediction pairs; got an odd number of arguments." >&2
-  exit 2
-fi
-
-names=()
-preds=()
-while [ "$#" -gt 0 ]; do
-  names+=("$1")
-  preds+=("$2")
-  shift 2
-done
-
-python eval/train/evaluate.py \
-  --names "${names[@]}" \
-  --predictions "${preds[@]}" \
-  --out scoring/scores_train.json \
-  --manifest-out tmp/eval_train_inputs.json
+mkdir -p scoring outputs
+python3 eval/train/evaluate.py --outputs outputs --data data/downloads/fb15k237 --out scoring/scores_train.json

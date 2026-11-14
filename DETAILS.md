@@ -27,21 +27,50 @@ efficiency than grounding-based search.
 
 ## Research Question
 
-How can a system answer complex first-order logical queries over an incomplete
-knowledge graph when the query contains existential variables, conjunction,
-disjunction, and negation?
+How can a system answer complex first-order logical queries over an
+incomplete knowledge graph, when the queries contain existentially quantified
+intermediate variables, conjunction, disjunction and negation, and the
+answers depend on facts that are missing from the observed graph?
+
+## Setting
+
+The knowledge graph is FB15k-237 (14,505 entities, 237 relations, each with an
+inverse relation). A query is an existential first-order formula with one free
+variable, e.g. "which entities `x` are reached from anchor `a` by relation
+`r1` followed by `r2`, but are not linked to anchor `b` by `r3`". Its answer
+set is defined on the complete graph, but a solver only sees the observed part.
+Answers that can already be read off the observed graph by exact traversal are
+trivial and are not scored; what counts is ranking the answers that need at
+least one missing fact.
+
+The gym uses two query benchmarks over the same graph:
+- the standard benchmark (14 query types: paths of length 1-3, 2- and 3-way
+  intersections, their compositions, unions, and five negated forms), where a
+  query's answers are typically reachable with a single missing fact;
+- a harder benchmark of fully unobservable queries, where every reasoning path
+  to a scored answer needs missing facts, including longer (4-hop) paths and
+  4-way intersections.
+
+Training queries of 10 types (with all their answers on the training graph) and
+validation queries (with answers) are provided; test queries come without
+answers.
 
 ## Why It Matters
 
-Knowledge graphs are incomplete in practice, so exact symbolic lookup misses
-valid answers. A good CQA system should generalize from observed triples while
-remaining efficient enough for multi-hop and multi-variable queries.
+Real knowledge graphs are incomplete, so exact symbolic lookup misses valid
+answers, and grounding every existential variable over every entity grows
+exponentially with the number of variables. A useful system must infer missing
+facts, compose them according to the query's logical structure (including
+negation), and do so at a cost that scales to large graphs and deeper queries.
+Being able to point at the intermediate entities that support an answer makes
+the reasoning checkable.
 
 ## Success Criteria
 
-A successful solution ranks correct answer entities highly for non-trivial
-complex queries, handles negation and multi-hop paths, and keeps inference cost
-controlled as query depth grows.
+A successful solution ranks the non-trivial answers of held-out queries highly
+across all query types, including negated ones and fully unobservable ones,
+and exposes intermediate entities for multi-hop queries that genuinely lie on
+a path to such an answer.
 
 ---
 
@@ -76,35 +105,119 @@ while retaining low inference complexity. Secondary claims are that the approach
 scales better than grounding-based enumeration, generalizes better to harder
 unobservable queries, and yields more interpretable intermediate witnesses.
 
+## Reproduction in This Gym
+
+`method/` implements the paper's LVSA on the paper's own FB15k-237 data
+(`scripts/method.sh`):
+- complex embeddings with `d = 1000` (2,000 reals per entity/relation),
+  Hadamard binding, NormAdd bundling, DNF max for unions, Hermitian-real
+  scoring; Kahn-order sequential execution of every query DAG;
+- `MLP_I(v(r))` for independent variables, `MLP_D(forward ; backward)` for
+  dependent ones (backward = NormAdd of `r^-1 ⊗ MLP_I(v(r^-1))` over the
+  variable's successors), `MLP_N(context ; atom)` for negation; LeakyReLU MLPs
+  with two hidden layers of width 2,000;
+- stage 1: ComplEx entity prediction with N3 (0.05) and the auxiliary relation
+  prediction objective (weight 0.25), Adagrad lr 0.1, batch 1,000, 100 epochs
+  (the paper initialises from pretrained ComplEx, d = 1000);
+- stage 2: embeddings frozen, `MLP_I`/`MLP_D` on 2p+3p with cross entropy plus
+  the in-batch candidate term (Eq. 25), Adam lr 5e-4, batch 512, 20 epochs;
+- stage 3: negator on 2in with `L_CE + L_NS + L_NL` (alpha = beta = 1,
+  `MSELoss(x, y) = ||x - y||^2` as in Eq. 20), Adam lr 5e-4, 30 epochs;
+- ablation `lvsa_no_logic`: stage 3 rerun with beta = 0 (same stages 1-2).
+
+Choices not fixed by the paper: epochs per stage, batch sizes, MLP width and
+depth, relation-prediction weight. Grid search over alpha/beta/lr is not
+repeated (the paper's selected values are used).
+
 ---
 
 # Evaluation
 
+## Data
+
+`scripts/download.sh` fetches the official release of the FB15k-237 query
+benchmarks and prepares `data/downloads/fb15k237/`:
+
+| file | content |
+|---|---|
+| `meta.json` | entity / relation counts, query types, query templates, list lengths |
+| `train_triples.npy`, `valid_triples.npy` | observed graph `[n, 3]` (head, relation, tail); relation ids come in inverse pairs, `inverse(r) = r ^ 1` |
+| `train_queries.npz` | training queries of 10 types (`q_<type>`) with all answers (`ans_<type>_indptr/indices`, CSR) |
+| `valid_std.npz`, `valid_hplus.npz` | validation queries (`q_<type>`), their scored answers (`hard_*`), the entities ignored when ranking (`filt_*`) and the entities reachable on the observed training graph (`obs_*`) |
+| `test_std.npz`, `test_hplus.npz` | test queries (`q_<type>`) and the entities reachable on the observed train+valid graph (`obs_*`); no answers |
+
+A query row lists its anchor entities followed by its relation ids, in the
+column order of the type's template in `meta.json` (`(head, relation column,
+tail, negated)` atoms; anchors `a0..`, variables `v1..`, answer `x`; union types
+have one atom list per branch). Test answers exist only in the hidden
+evaluator.
+
+## Experiments (scored)
+
+| experiment | weight | what it measures |
+|---|---:|---|
+| `fb15k237_cqa` | 0.55 | answering the 14 standard query types (fixed sample of 2,000 test queries per type) |
+| `fb15k237_unobservable` | 0.25 | answering fully unobservable queries: 14 standard types plus 4p and 4i (up to 1,000 test queries per type) |
+| `fb15k237_traceability` | 0.20 | whether the intermediate entities a method names for 2p/3p queries lie on a real path to a non-trivial answer |
+
 ## Metrics
 
-Primary accuracy is filtered mean reciprocal rank (MRR): for each correct
-answer, rank it against non-answer entities and average reciprocal ranks.
-Hits@K reports the fraction of answers ranked in the top K. Higher MRR and
-Hits@K are better. The reusable scaled benchmark also reports parameter count
-as a resource constraint, where lower is better for comparable accuracy.
+All values are percentages; higher is better.
 
-## Baselines and Targets
+- **Filtered MRR / Hits@k.** For each scored (non-trivial) answer, its rank is
+  1 + the number of *non-answer* entities listed above it. Other answers,
+  the benchmark's easy answers, and every entity already reachable on the
+  observed graph are ignored wherever they appear. Answers missing from the
+  submitted list count as reciprocal rank 0. Per query, scores are averaged
+  over its scored answers; per type, over queries.
+  `mrr_A` / `hits*_A` average the 14 standard types, `*_Ap` the 9 positive
+  types (1p 2p 3p 2i 3i ip pi 2u up), `*_An` the 5 negated types (2in 3in inp
+  pin pni). `mrr_<type>` reports each type.
+- **Traceability.** For a 2p query `a -r1-> V1 -r2-> x` an entity is a valid
+  `V1` if `(a, r1, V1)` and `(V1, r2, t)` hold in the complete graph for some
+  scored answer `t` (3p: `V1`, `V2` must lie on a complete-graph chain from `a`
+  to a scored answer). `trace_var_mrr` / `trace_var_p1`: reciprocal rank of the
+  first valid entity / precision at 1 in each variable's ranking, averaged over
+  2p-V1, 3p-V1 and 3p-V2. `trace_path_p1`: fraction of queries whose top-1
+  intermediate entities and top-1 non-ignored answer form a valid
+  complete-graph chain ending at a scored answer (2p and 3p averaged).
 
-Reference systems for this task include both neural query-embedding approaches
-and search-based logical reasoning approaches. The public-paper reference
-values are recorded in `scoring/reference.json` for context. The runnable gym
-uses a scaled synthetic CQA benchmark with the same output contract and metric
-types, so future methods can be evaluated without requiring the full standard
-benchmark download.
+## Submission format
 
-## Evaluation Protocol
+Every directory `outputs/<method>/` is one method. It must contain integer
+arrays (`np.savez`, no pickles), rows in the order of the public query files:
 
-Evaluation reads prediction artifacts produced by a method and scores them
-against fixed test query labels. The evaluator does not import method code or
-regenerate predictions. For each query, predictions are ranked entity IDs; the
-first predicted entity that is a labeled answer determines MRR and Hits@K.
-Prediction files are not trusted as a label source; if they include query
-metadata, it must match the fixed test set.
+| file | arrays |
+|---|---|
+| `valid_std.npz`, `test_std.npz` | `rank_<type>` `[n_type, K]` for the 14 standard types; `trace_2p_v1` `[n_2p, KT]`, `trace_3p_v1`, `trace_3p_v2` `[n_3p, KT]` |
+| `valid_hplus.npz`, `test_hplus.npz` | `rank_<type>` `[n_type, K]` for the 16 types |
+
+`rank_*` rows list entity ids best first, without repeats (`1 <= K <= 14505`;
+1000 is enough in practice, and the `obs_*` entities may be left out because
+they are ignored). Trace rows rank candidate entities for each existential
+variable (`KT = 100` recommended).
+
+## Scoring rules
+
+- `bash scripts/evaluate_train.sh` scores every method on the validation
+  queries → `scoring/scores_train.json`; `bash scripts/evaluate_test.sh`
+  scores every method on the hidden test queries → `scoring/scores_test.json`.
+  Both take no arguments.
+- Every number is recomputed from the submitted rankings; nothing else a
+  method writes (claimed scores, parameter counts, timings, flags) is read.
+- A present array with a wrong shape or row count, a non-integer dtype, an
+  out-of-range or repeated id fails the whole method: every metric of every
+  experiment gets its worst value (0). A missing file or ranking array gives
+  worst values for that experiment; missing trace arrays give worst trace
+  values. Failed methods are still listed.
+
+## Baselines
+
+Runnable baselines (in `scores_*.json`): `random` (random lists),
+`symbolic_traversal` (exhaustive grounding of all variables on the observed
+graph plus a relation-popularity prior), `vsa_composition` (training-free
+vector composition of pretrained link-prediction embeddings). Published
+numbers of other systems are recorded in `scoring/reference.json`.
 
 ---
 

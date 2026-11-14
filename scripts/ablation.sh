@@ -1,22 +1,14 @@
 #!/bin/bash
-# Run the LVSA negation ablation corresponding to the paper's w/o L_NL setting.
+# Paper ablation "w/o L_NL": rerun only the negator stage of the reference
+# (same stage-1 embeddings and stage-2 Skolem modules) with the logical-axiom
+# loss removed (beta = 0). Requires scripts/method.sh to have run.
+#
+# Usage: bash scripts/ablation.sh
 
-set -e
+set -euo pipefail
 
-cd /home/user
+cd "$(dirname "$0")/.."
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-if [ ! -f data/synthetic/train.jsonl ]; then
-  bash scripts/download.sh
-fi
-
-python method/train.py \
-  --out checkpoints/lvsa_no_logic_synthetic.pt \
-  --neg-beta 0.0
-python method/predict.py \
-  --checkpoint checkpoints/lvsa_no_logic_synthetic.pt \
-  --out outputs/lvsa_no_logic_predictions.jsonl
-
-bash scripts/evaluate.sh \
-  lvsa outputs/lvsa_predictions.jsonl \
-  lvsa_no_logic outputs/lvsa_no_logic_predictions.jsonl \
-  random outputs/random_predictions.jsonl
+python3 method/train.py --name lvsa_no_logic --seed 1 --init checkpoints/lvsa_stage2.pt --start-stage 3 --beta 0
+python3 method/predict.py --checkpoint checkpoints/lvsa_no_logic.pt --name lvsa_no_logic

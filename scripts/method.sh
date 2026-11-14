@@ -1,24 +1,14 @@
 #!/bin/bash
-# Run the paper's proposed method.
+# Train the reproduced method (three-stage curriculum) and write its ranked
+# predictions to outputs/lvsa/. Extra arguments go to method/train.py.
 #
-# This script trains/runs the paper's method using code in method/.
-#
-# Usage:
-#   bash scripts/method.sh
+# Usage: bash scripts/method.sh [train.py options]
 
-set -e
+set -euo pipefail
 
-cd /home/user
+cd "$(dirname "$0")/.."
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-if [ ! -f data/synthetic/train.jsonl ]; then
-  bash scripts/download.sh
-fi
-
-python method/train.py "$@"
-python method/predict.py --checkpoint checkpoints/lvsa_synthetic.pt --out outputs/lvsa_predictions.jsonl
-
-if [ -f outputs/random_predictions.jsonl ]; then
-  bash scripts/evaluate.sh lvsa outputs/lvsa_predictions.jsonl random outputs/random_predictions.jsonl
-else
-  bash scripts/evaluate.sh lvsa outputs/lvsa_predictions.jsonl
-fi
+bash scripts/download.sh
+python3 method/train.py --name lvsa --seed 1 "$@"
+python3 method/predict.py --checkpoint checkpoints/lvsa.pt --name lvsa

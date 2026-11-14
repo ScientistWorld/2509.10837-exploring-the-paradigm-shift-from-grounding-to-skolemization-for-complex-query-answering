@@ -1,87 +1,17 @@
 #!/bin/bash
-# Held-out test-slice evaluator for the research gym.
+# Hidden test evaluation of every method on disk.
 #
-# Usage mirrors scripts/evaluate.sh:
-#   bash scripts/evaluate_test.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]
+# Usage: bash scripts/evaluate_test.sh         (no arguments)
 #
-# With no arguments, the script first reuses the train-slice input manifest,
-# then falls back to discovering outputs/*_predictions.jsonl. It writes
-# scoring/scores_test.json and enforces the same method set as scores_train.json.
+# Every directory under outputs/ is a method and is scored from its raw ranked
+# lists outputs/<method>/test_std.npz and outputs/<method>/test_hplus.npz
+# against the ground truth that lives only in eval/test/data/. A method whose
+# files are missing or invalid is still listed, with worst values.
+# Writes scoring/scores_test.json.
 
-set -e
+set -euo pipefail
 
-cd /home/user
+cd "$(dirname "$0")/.."
 
-mkdir -p scoring tmp
-
-if [ "$#" -eq 0 ]; then
-  discovered=()
-  if [ -f tmp/eval_train_inputs.json ]; then
-    mapfile -t discovered < <(python - <<'PY'
-import json
-from pathlib import Path
-
-payload = json.loads(Path("tmp/eval_train_inputs.json").read_text())
-if payload.get("slice") != "train":
-    raise SystemExit("tmp/eval_train_inputs.json does not describe the train slice")
-for item in payload.get("methods", []):
-    print(item["name"])
-    print(item["predictions"])
-PY
-)
-  elif [ -f scoring/scores_train.json ]; then
-    mapfile -t discovered < <(python - <<'PY'
-import json
-from pathlib import Path
-
-payload = json.loads(Path("scoring/scores_train.json").read_text())
-methods = sorted(payload.get("experiments", {}).get("scaled_synthetic_cqa", {}).get("results", {}))
-for name in methods:
-    path = Path("outputs") / f"{name}_predictions.jsonl"
-    if not path.exists():
-        raise SystemExit(f"could not discover predictions for train method {name}: expected {path}")
-    print(name)
-    print(path)
-PY
-)
-  else
-    shopt -s nullglob
-    for pred in outputs/*_predictions.jsonl; do
-      base=$(basename "$pred")
-      name=${base%_predictions.jsonl}
-      discovered+=("$name" "$pred")
-    done
-    shopt -u nullglob
-  fi
-
-  if [ "${#discovered[@]}" -eq 0 ]; then
-    echo "Usage: bash scripts/evaluate_test.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
-    echo "No train manifest, scores_train.json mapping, or outputs/*_predictions.jsonl files were found." >&2
-    exit 2
-  fi
-  set -- "${discovered[@]}"
-fi
-
-if [ "$#" -lt 2 ]; then
-  echo "Usage: bash scripts/evaluate_test.sh <method_name> <predictions.jsonl> [<method_name> <predictions.jsonl> ...]" >&2
-  exit 2
-fi
-if [ $(( $# % 2 )) -ne 0 ]; then
-  echo "Usage: bash scripts/evaluate_test.sh expects method/prediction pairs; got an odd number of arguments." >&2
-  exit 2
-fi
-
-names=()
-preds=()
-while [ "$#" -gt 0 ]; do
-  names+=("$1")
-  preds+=("$2")
-  shift 2
-done
-
-python eval/test/evaluate.py \
-  --names "${names[@]}" \
-  --predictions "${preds[@]}" \
-  --out scoring/scores_test.json \
-  --require-train-methods scoring/scores_train.json \
-  --manifest-out tmp/eval_test_inputs.json
+mkdir -p scoring outputs
+python3 eval/test/evaluate.py --outputs outputs --out scoring/scores_test.json

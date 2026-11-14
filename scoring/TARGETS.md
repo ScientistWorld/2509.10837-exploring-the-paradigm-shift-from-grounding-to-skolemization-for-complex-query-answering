@@ -1,34 +1,41 @@
 # Evaluation Targets
 
-## Primary: scaled_synthetic_cqa
-Tests whether a method ranks correct entities highly for fixed complex KG
-queries containing paths, intersections, and negation.
-- **Metric**: `mrr`, `hits1`, `hits10` (higher is better)
-- **Reference**: compare scaled results against the reproduced random baseline
-  and the fixed scaled-gym targets. Public-paper table values are kept
-  separately in `scoring/reference.json` because they are not numerically
-  comparable to this substitute dataset.
+All metrics are percentages computed by the evaluators from submitted rankings
+(see `briefing/evaluation.md`). Paper values are in `scoring/reference.json`.
 
-## Constraint: scaled_synthetic_cqa
-Tracks model size so improvements cannot come only from unbounded parameter
-scaling.
-- **Metric**: `param_count_k` (lower is better for comparable accuracy)
+## Primary: fb15k237_cqa
+Rank the non-trivial answers of standard FB15k-237 complex queries (14 types).
+- **Metrics**: `mrr_A` (primary), `mrr_Ap`, `mrr_An`, `hits1_A`, `hits1_Ap`,
+  `hits1_An`, `hits3_A`, `hits10_A`, per-type `mrr_<type>` (higher is better).
+- **Reference**: the reproduced method's score in `scoring/scores_test.json`;
+  the paper reports `mrr_A` 22.4 / `hits1_A` 15.4 on the full test set.
+- **Baselines**: `random`, `symbolic_traversal`, `vsa_composition` must score
+  clearly below the reference.
 
-## Ablation: scaled_synthetic_cqa
-Tests whether a method variant that removes a negated-query consistency
-mechanism harms negated query answering.
-- **Metric**: `mrr_2in` (higher is better)
+## Secondary: fb15k237_unobservable
+Rank the full-inference answers of FB15k-237+H queries (14 standard types plus
+4p and 4i).
+- **Metrics**: `mrr_A` (primary, average of the 14 standard types), `mrr_Ap`,
+  `mrr_An`, `hits1_A`, `hits10_A`, per-type `mrr_<type>`, `mrr_4p`, `mrr_4i`.
+- **Reference**: paper `mrr_A` (A_H) 12.2.
 
-## Secondary: scaled_synthetic_cqa Traceability
-Tests whether emitted intermediate rankings identify entities that can serve as
-valid witnesses for multi-hop query paths.
-- **Metric**: `trace_variable_mrr`, `trace_variable_p1`, `trace_path_p1`
-  (higher is better)
-- Methods that do not emit intermediate traces receive zero credit for these
-  metrics while still being scored on answer ranking.
+## Secondary / constraint: fb15k237_traceability
+Intermediate entities named for 2p/3p queries must lie on complete-graph paths
+to non-trivial answers. This is the logic-fidelity requirement: answer accuracy
+must not be bought with untraceable reasoning.
+- **Metrics**: `trace_var_mrr` (primary), `trace_var_p1`, `trace_path_p1`.
 
-## Paper References
-`scoring/reference.json` records public-paper FB15k-237 main-result aggregates
-and negation-ablation values for context. The runnable reproduction in
-`scoring/scores.json` uses `scaled_synthetic_cqa` to report the same kinds of
-effects on an accessible fixed benchmark.
+## Constraint: valid submissions
+Every ranking must be a duplicate-free list of valid entity ids for every
+query; any violation scores the method as failed (worst value on every metric).
+
+## Ablation (within fb15k237_cqa)
+Removing the logical-axiom regulariser of the negation operator
+(`lvsa_no_logic`) should lower `mrr_An` relative to the reference while
+leaving the positive types unchanged (paper Table VII: An 10.9 → 7.6).
+
+## Not scored
+Inference throughput (paper Sec. VI-D) is not scored: metrics may not depend on
+wall-clock time and cost cannot be recomputed from rankings. See
+`scoring/DIRECTION.md` for the scope rule that keeps attempts within
+efficient, structure-following inference.

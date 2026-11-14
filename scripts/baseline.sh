@@ -1,25 +1,20 @@
 #!/bin/bash
-# Run a baseline method from the paper.
+# Baselines, each written as a method directory under outputs/:
+#   random              seeded random rankings
+#   symbolic_traversal  exhaustive grounding on the observed graph + popularity
+#   vsa_composition     training-free VSA composition of the reference's
+#                       stage-1 embeddings (needs checkpoints/lvsa_stage1.pt)
 #
-# Baselines are simple reference methods the paper compares against. 
-# Implement this only if applicable, i.e. the paper has baselines.
-# You do not need to implement all baselines to begin — 
-# just enough to validate that the evaluation pipeline works 
-# and provide a reference point. You can decide to expand more baselines later.
-# Each baseline must be actually run and scored through evaluate.sh
-# so the numbers are verified, not self-reported.
-# You can decide what this baseline script should do yourself.
-#
-# Usage:
-#   bash scripts/baseline.sh <name>
+# Usage: bash scripts/baseline.sh
 
-set -e
+set -euo pipefail
 
-cd /home/user
+cd "$(dirname "$0")/.."
 
-if [ ! -f data/synthetic/test.jsonl ]; then
-  bash scripts/download.sh
+python3 baseline/random_ranker.py --name random
+python3 baseline/symbolic_traversal.py --name symbolic_traversal
+if [ -f checkpoints/lvsa_stage1.pt ]; then
+  python3 method/predict.py --checkpoint checkpoints/lvsa_stage1.pt --name vsa_composition --mode vsa
+else
+  echo "checkpoints/lvsa_stage1.pt missing; run scripts/method.sh first for vsa_composition" >&2
 fi
-
-python baseline/random_ranker.py --out outputs/random_predictions.jsonl
-bash scripts/evaluate.sh random outputs/random_predictions.jsonl

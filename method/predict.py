@@ -1,51 +1,93 @@
+"""Write ranked predictions for the validation and test queries.
+
+Output: outputs/<name>/{valid,test}_{std,hplus}.npz with
+  rank_<type>   [n, 1000] int16  entity ids, best first
+  trace_2p_v1, trace_3p_v1, trace_3p_v2  [n, 100] int16 (std files only):
+                ranking of each existential variable's Skolem embedding
+
+Answers already reachable on the observed graph (``obs_*`` in the public query
+files) are removed from the ranked list before truncation; the evaluator
+ignores them wherever they appear, so this only avoids wasting list slots.
+
+``--mode vsa`` scores queries with training-free VSA composition of the
+stage-1 embeddings (variables = bundled projections, negation = sign flip);
+it is used as the simple composition baseline.
+"""
+
 from __future__ import annotations
 
 import argparse
 import json
-import time
+import os
 from pathlib import Path
 
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+
+import numpy as np
 import torch
 
-from lvsa import LVSA, load_jsonl
+from lvsa import HPLUS_TYPES, LVSA, STD_TYPES, num_anchors
+
+K = 1000
+KT = 100
+
+
+def predict_file(model, src: Path, dst: Path, types, device, pure_vsa: bool, traces: bool, batch: int):
+    z = np.load(src, allow_pickle=False)
+    out = {}
+    for t in types:
+        q = z[f"q_{t}"]
+        indptr, indices = z[f"obs_{t}_indptr"], z[f"obs_{t}_indices"]
+        na = num_anchors(t)
+        ranks, tr = [], {}
+        for i in range(0, len(q), batch):
+            rows = q[i : i + batch]
+            anchors = torch.from_numpy(rows[:, :na].astype(np.int64)).to(device)
+            rels = torch.from_numpy(rows[:, na:].astype(np.int64)).to(device)
+            scores, nodes = model.query_scores(t, anchors, rels, pure_vsa=pure_vsa, return_nodes=True)
+            lo, hi = indptr[i], indptr[min(i + batch, len(q))]
+            counts = np.diff(indptr[i : min(i + batch, len(q)) + 1])
+            row_ids = np.repeat(np.arange(len(rows)), counts)
+            if hi > lo:
+                scores[torch.from_numpy(row_ids).to(device), torch.from_numpy(indices[lo:hi].astype(np.int64)).to(device)] = float("-inf")
+            ranks.append(torch.topk(scores, K, dim=1).indices.to(torch.int16).cpu().numpy())
+            if traces and t in ("2p", "3p"):
+                for v in (["v1"] if t == "2p" else ["v1", "v2"]):
+                    vs = model.score(nodes[0][v])
+                    tr.setdefault(v, []).append(torch.topk(vs, KT, dim=1).indices.to(torch.int16).cpu().numpy())
+        out[f"rank_{t}"] = np.concatenate(ranks)
+        for v, parts in tr.items():
+            out[f"trace_{t}_{v}"] = np.concatenate(parts)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    np.savez(dst, **out)
+    print(f"wrote {dst}", flush=True)
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", type=Path, default=Path("checkpoints/lvsa_synthetic.pt"))
-    parser.add_argument("--data", type=Path, default=Path("data/synthetic/test.jsonl"))
-    parser.add_argument("--out", type=Path, default=Path("outputs/lvsa_predictions.jsonl"))
-    parser.add_argument("--topk", type=int, default=20)
-    args = parser.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("--checkpoint", type=Path, required=True)
+    p.add_argument("--name", required=True)
+    p.add_argument("--data", type=Path, default=Path("data/downloads/fb15k237"))
+    p.add_argument("--outputs", type=Path, default=Path("outputs"))
+    p.add_argument("--mode", choices=["lvsa", "vsa"], default="lvsa")
+    p.add_argument("--splits", default="valid,test")
+    p.add_argument("--device", default="cuda:0")
+    p.add_argument("--batch", type=int, default=500)
+    args = p.parse_args()
 
-    # Checkpoints are produced locally by method/train.py in this workspace.
-    # Explicit weights_only=False keeps compatibility with PyTorch >= 2.6.
-    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
-    meta = ckpt["meta"]
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = LVSA(meta["num_entities"], meta["relations"], ckpt["args"]["dim"], ckpt["args"]["hidden"]).to(device)
-    model.load_state_dict(ckpt["model"])
+    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
+    state = torch.load(args.checkpoint, map_location=device, weights_only=True)
+    cfg = state["config"]
+    meta = json.loads((args.data / "meta.json").read_text())
+    model = LVSA(meta["num_entities"], meta["num_relations"], cfg["dim"], cfg["hidden"]).to(device)
+    model.load_state_dict(state["model"])
     model.eval()
-    rows = load_jsonl(args.data)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    started = time.perf_counter()
-    with args.out.open("w") as f, torch.no_grad():
-        for row in rows:
-            scores = model.scores(row["query"])
-            top = torch.topk(scores, k=min(args.topk, scores.numel())).indices.cpu().tolist()
-            out_row = {"query": row["query"], "ranking": top}
-            trace = {}
-            for key, vals in model.trace_scores(row["query"]).items():
-                trace[key.replace("_scores", "_ranking")] = torch.topk(
-                    vals, k=min(args.topk, vals.numel())
-                ).indices.cpu().tolist()
-            if trace:
-                out_row["trace"] = trace
-            f.write(json.dumps(out_row) + "\n")
-    elapsed = time.perf_counter() - started
-    param_count = sum(p.numel() for p in model.parameters())
-    meta_out = {"method": "lvsa", "elapsed_seconds": elapsed, "num_queries": len(rows), "param_count": param_count}
-    args.out.with_suffix(".meta.json").write_text(json.dumps(meta_out, indent=2) + "\n")
+    with torch.no_grad():
+        for split in args.splits.split(","):
+            predict_file(model, args.data / f"{split}_std.npz", args.outputs / args.name / f"{split}_std.npz",
+                         STD_TYPES, device, args.mode == "vsa", True, args.batch)
+            predict_file(model, args.data / f"{split}_hplus.npz", args.outputs / args.name / f"{split}_hplus.npz",
+                         HPLUS_TYPES, device, args.mode == "vsa", False, args.batch)
 
 
 if __name__ == "__main__":

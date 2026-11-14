@@ -1,109 +1,532 @@
 {
-  "experiments": {
-    "scaled_synthetic_cqa": {
-      "description": "Runnable scaled CQA benchmark used by the train/test gym split; no paper table value exists for this generated dataset.",
-      "notes": "These fixed scaled-gym target values come from the completed local reproduction on the deterministic synthetic benchmark. They are not paper-published values; paper-published FB15k-237 references are recorded in separate context experiments below.",
-      "weight": 0.98,
-      "primary_metric": "mrr",
-      "metrics": {
-        "mrr": {"higher_is_better": true, "coefficient": 1.0, "description": "Mean reciprocal rank over all synthetic CQA queries."},
-        "hits1": {"higher_is_better": true, "coefficient": 0.5, "description": "Fraction of queries whose first-ranked entity is a correct answer."},
-        "hits10": {"higher_is_better": true, "coefficient": 0.25, "description": "Fraction of queries with a correct answer in the top ten ranked entities."},
-        "mrr_1p": {"higher_is_better": true, "coefficient": 0.2, "description": "Mean reciprocal rank on single-hop path queries."},
-        "mrr_2p": {"higher_is_better": true, "coefficient": 0.4, "description": "Mean reciprocal rank on two-hop path queries."},
-        "mrr_3p": {"higher_is_better": true, "coefficient": 0.4, "description": "Mean reciprocal rank on three-hop path queries."},
-        "mrr_2i": {"higher_is_better": true, "coefficient": 0.3, "description": "Mean reciprocal rank on two-way intersection queries."},
-        "mrr_2in": {"higher_is_better": true, "coefficient": 0.3, "description": "Mean reciprocal rank on intersection queries with negation."},
-        "trace_variable_mrr": {"higher_is_better": true, "coefficient": 0.2, "description": "Mean reciprocal rank for intermediate variable rankings on path queries."},
-        "trace_variable_p1": {"higher_is_better": true, "coefficient": 0.2, "description": "Precision at one for intermediate variable choices on path queries."},
-        "trace_path_p1": {"higher_is_better": true, "coefficient": 0.2, "description": "Fraction of path queries whose top trace forms a valid reasoning path."},
-        "param_count_k": {"higher_is_better": false, "coefficient": -0.1, "description": "Trainable parameter count in thousands, used as a model-size constraint."}
-      },
-      "results": {
-        "random": {
-          "type": "baseline",
-          "mrr": 0.05562266081828717,
-          "hits1": 0.012857142857142857,
-          "hits10": 0.14142857142857143,
-          "mrr_1p": 0.03224439764460651,
-          "mrr_2p": 0.06599826750833192,
-          "mrr_3p": 0.11850445512010668,
-          "mrr_2i": 0.026351847311515443,
-          "mrr_2in": 0.015852885291310966,
-          "trace_variable_mrr": 0.0,
-          "trace_variable_p1": 0.0,
-          "trace_path_p1": 0.0,
-          "param_count_k": 0.0
-        },
-        "lvsa": {
-          "type": "proposed",
-          "mrr": 0.4931467736214623,
-          "hits1": 0.42857142857142855,
-          "hits10": 0.6128571428571429,
-          "mrr_1p": 0.7100107773819274,
-          "mrr_2p": 0.3894310124693012,
-          "mrr_3p": 0.2521242707721527,
-          "mrr_2i": 0.5583174003822817,
-          "mrr_2in": 0.6428923800026152,
-          "trace_variable_mrr": 0.24192733426220062,
-          "trace_variable_p1": 0.1574468085106383,
-          "trace_path_p1": 0.0670926517571885,
-          "param_count_k": 251.904
-        },
-        "lvsa_no_logic": {
-          "type": "proposed",
-          "mrr": 0.4747845006490318,
-          "hits1": 0.41,
-          "hits10": 0.5971428571428572,
-          "mrr_1p": 0.7100107773819274,
-          "mrr_2p": 0.3894310124693012,
-          "mrr_3p": 0.2521242707721527,
-          "mrr_2i": 0.5583174003822817,
-          "mrr_2in": 0.5046817232208834,
-          "trace_variable_mrr": 0.24192733426220062,
-          "trace_variable_p1": 0.1574468085106383,
-          "trace_path_p1": 0.0670926517571885,
-          "param_count_k": 251.904
-        }
-      }
+ "experiments": {
+  "fb15k237_cqa": {
+   "description": "Complex query answering on the standard FB15k-237 benchmark (BetaE query splits, 14 query types): rank the non-trivial answers of each test query, i.e. answers that need at least one fact missing from the observed graph. Paper Tables IV/V (and Table VII for the negation ablation).",
+   "notes": "Paper numbers (percent) are recorded unchanged. Gym protocol: the paper's own data and filtered MRR/Hits over non-trivial answers, with these departures: (1) a fixed sample of 2000 test queries per type instead of all test queries; (2) methods submit their top-1000 entities per query and unlisted answers count as reciprocal rank 0; (3) besides the benchmark's easy answers, every entity already reachable on the observed train+valid graph is ignored when ranking (identical to the standard filter for positive types; for negated types it also ignores entities that only fail the negated atom through a held-out fact, so post-hoc removal of graph-reachable entities cannot change a score). lvsa_no_logic / lvsa_wo_lns hold the paper's Table VII ablation values.",
+   "weight": 0.55,
+   "primary_metric": "mrr_A",
+   "metrics": {
+    "mrr_A": {
+     "higher_is_better": true,
+     "coefficient": 1.0,
+     "description": "Filtered MRR (%) over non-trivial answers, averaged over the 14 query types."
     },
-    "paper_standard_fb15k237": {
-      "description": "Paper Table IV/V main-result aggregate on FB15k-237 for Skolemization-based CQA methods. Metrics are percentages reported in the paper.",
-      "weight": 0.01,
-      "primary_metric": "mrr_A",
-      "metrics": {
-        "mrr_A": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over all FB15k-237 query families."},
-        "mrr_Ap": {"higher_is_better": true, "coefficient": 0.5, "description": "Published MRR over positive FB15k-237 query families."},
-        "mrr_An": {"higher_is_better": true, "coefficient": 0.5, "description": "Published MRR over negated FB15k-237 query families."},
-        "hits1_A": {"higher_is_better": true, "coefficient": 0.5, "description": "Published Hits@1 over all FB15k-237 query families."},
-        "hits1_An": {"higher_is_better": true, "coefficient": 0.3, "description": "Published Hits@1 over negated FB15k-237 query families."}
-      },
-      "results": {
-        "cqd_co": {"type": "baseline", "mrr_A": 13.3, "mrr_Ap": 19.8, "mrr_An": 1.7, "hits1_A": 9.7, "hits1_An": 0.5},
-        "betae": {"type": "baseline", "mrr_A": 15.4, "mrr_Ap": 20.9, "mrr_An": 5.5, "hits1_A": 9.6, "hits1_An": 2.8},
-        "cone": {"type": "baseline", "mrr_A": 17.1, "mrr_Ap": 23.4, "mrr_An": 5.9, "hits1_A": 10.9, "hits1_An": 2.2},
-        "lmpnn": {"type": "baseline", "mrr_A": 18.3, "mrr_Ap": 24.1, "mrr_An": 7.8, "hits1_A": 11.7, "hits1_An": 3.5},
-        "clmpt": {"type": "baseline", "mrr_A": 19.4, "mrr_Ap": 25.9, "mrr_An": 7.9, "hits1_A": 12.2, "hits1_An": 2.9},
-        "lvsa": {"type": "proposed", "mrr_A": 22.4, "mrr_Ap": 28.8, "mrr_An": 10.9, "hits1_A": 15.4, "hits1_An": 5.5}
-      }
+    "mrr_Ap": {
+     "higher_is_better": true,
+     "coefficient": 0.3,
+     "description": "Filtered MRR (%) averaged over the 9 positive (EPFO) query types."
     },
-    "paper_negation_ablation_fb15k237": {
-      "description": "Paper Table VII negation-ablation results on FB15k-237. Metrics are MRR percentages for negated query families.",
-      "weight": 0.01,
-      "primary_metric": "An",
-      "metrics": {
-        "An": {"higher_is_better": true, "coefficient": 1.0, "description": "Published aggregate MRR over negated FB15k-237 query families."},
-        "2in": {"higher_is_better": true, "coefficient": 0.4, "description": "Published MRR on two-way intersection queries with negation."},
-        "3in": {"higher_is_better": true, "coefficient": 0.4, "description": "Published MRR on three-way intersection queries with negation."},
-        "inp": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on intersection-then-path negated query families."},
-        "pin": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on path-then-intersection negated query families."},
-        "pni": {"higher_is_better": true, "coefficient": 0.2, "description": "Published MRR on path-negation-intersection query families."}
-      },
-      "results": {
-        "lvsa": {"type": "proposed", "An": 10.9, "2in": 12.4, "3in": 18.3, "inp": 8.5, "pin": 7.3, "pni": 8.0},
-        "lvsa_wo_lns": {"type": "proposed", "An": 10.4, "2in": 12.2, "3in": 16.5, "inp": 8.1, "pin": 6.9, "pni": 8.4},
-        "lvsa_wo_lnl": {"type": "proposed", "An": 7.6, "2in": 7.4, "3in": 13.9, "inp": 7.0, "pin": 5.1, "pni": 4.5}
-      }
+    "mrr_An": {
+     "higher_is_better": true,
+     "coefficient": 0.3,
+     "description": "Filtered MRR (%) averaged over the 5 query types with negation."
+    },
+    "hits1_A": {
+     "higher_is_better": true,
+     "coefficient": 0.5,
+     "description": "Filtered Hits@1 (%) averaged over the 14 query types."
+    },
+    "hits1_Ap": {
+     "higher_is_better": true,
+     "coefficient": 0.15,
+     "description": "Filtered Hits@1 (%) averaged over the positive query types."
+    },
+    "hits1_An": {
+     "higher_is_better": true,
+     "coefficient": 0.15,
+     "description": "Filtered Hits@1 (%) averaged over the negated query types."
+    },
+    "hits3_A": {
+     "higher_is_better": true,
+     "coefficient": 0.1,
+     "description": "Filtered Hits@3 (%) averaged over the 14 query types."
+    },
+    "hits10_A": {
+     "higher_is_better": true,
+     "coefficient": 0.1,
+     "description": "Filtered Hits@10 (%) averaged over the 14 query types."
+    },
+    "mrr_1p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 1p queries."
+    },
+    "mrr_2p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 2p queries."
+    },
+    "mrr_3p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 3p queries."
+    },
+    "mrr_2i": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 2i queries."
+    },
+    "mrr_3i": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 3i queries."
+    },
+    "mrr_ip": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on ip queries."
+    },
+    "mrr_pi": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on pi queries."
+    },
+    "mrr_2u": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 2u queries."
+    },
+    "mrr_up": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on up queries."
+    },
+    "mrr_2in": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 2in queries."
+    },
+    "mrr_3in": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on 3in queries."
+    },
+    "mrr_inp": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on inp queries."
+    },
+    "mrr_pin": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on pin queries."
+    },
+    "mrr_pni": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on pni queries."
     }
+   },
+   "results": {
+    "cqd_co": {
+     "type": "baseline",
+     "mrr_A": 13.3,
+     "mrr_Ap": 19.8,
+     "mrr_An": 1.7,
+     "mrr_1p": 46.7,
+     "mrr_2p": 10.3,
+     "mrr_3p": 6.5,
+     "mrr_2i": 23.1,
+     "mrr_3i": 29.8,
+     "mrr_pi": 22.1,
+     "mrr_ip": 16.3,
+     "mrr_2u": 14.2,
+     "mrr_up": 8.9,
+     "mrr_2in": 0.2,
+     "mrr_3in": 0.2,
+     "mrr_inp": 2.1,
+     "mrr_pin": 0.1,
+     "mrr_pni": 6.1,
+     "hits1_A": 9.7,
+     "hits1_Ap": 14.7,
+     "hits1_An": 0.5
+    },
+    "betae": {
+     "type": "baseline",
+     "mrr_A": 15.4,
+     "mrr_Ap": 20.9,
+     "mrr_An": 5.5,
+     "mrr_1p": 39.0,
+     "mrr_2p": 10.9,
+     "mrr_3p": 10.0,
+     "mrr_2i": 28.8,
+     "mrr_3i": 42.5,
+     "mrr_pi": 22.4,
+     "mrr_ip": 12.6,
+     "mrr_2u": 12.4,
+     "mrr_up": 9.7,
+     "mrr_2in": 5.1,
+     "mrr_3in": 7.9,
+     "mrr_inp": 7.4,
+     "mrr_pin": 3.5,
+     "mrr_pni": 3.4,
+     "hits1_A": 9.6,
+     "hits1_Ap": 13.4,
+     "hits1_An": 2.8
+    },
+    "cone": {
+     "type": "baseline",
+     "mrr_A": 17.1,
+     "mrr_Ap": 23.4,
+     "mrr_An": 5.9,
+     "mrr_1p": 41.8,
+     "mrr_2p": 12.8,
+     "mrr_3p": 11.0,
+     "mrr_2i": 32.6,
+     "mrr_3i": 47.3,
+     "mrr_pi": 25.5,
+     "mrr_ip": 14.0,
+     "mrr_2u": 14.5,
+     "mrr_up": 10.8,
+     "mrr_2in": 5.4,
+     "mrr_3in": 8.6,
+     "mrr_inp": 7.8,
+     "mrr_pin": 4.0,
+     "mrr_pni": 3.6,
+     "hits1_A": 10.9,
+     "hits1_Ap": 15.6,
+     "hits1_An": 2.2
+    },
+    "lmpnn": {
+     "type": "baseline",
+     "mrr_A": 18.3,
+     "mrr_Ap": 24.1,
+     "mrr_An": 7.8,
+     "mrr_1p": 45.9,
+     "mrr_2p": 13.1,
+     "mrr_3p": 10.3,
+     "mrr_2i": 34.8,
+     "mrr_3i": 48.9,
+     "mrr_pi": 22.7,
+     "mrr_ip": 17.6,
+     "mrr_2u": 13.5,
+     "mrr_up": 10.3,
+     "mrr_2in": 8.7,
+     "mrr_3in": 12.9,
+     "mrr_inp": 7.7,
+     "mrr_pin": 4.6,
+     "mrr_pni": 5.2,
+     "hits1_A": 11.7,
+     "hits1_Ap": 16.3,
+     "hits1_An": 3.5
+    },
+    "clmpt": {
+     "type": "baseline",
+     "mrr_A": 19.4,
+     "mrr_Ap": 25.9,
+     "mrr_An": 7.9,
+     "mrr_1p": 45.7,
+     "mrr_2p": 13.7,
+     "mrr_3p": 11.3,
+     "mrr_2i": 37.4,
+     "mrr_3i": 52.0,
+     "mrr_pi": 28.2,
+     "mrr_ip": 19.0,
+     "mrr_2u": 14.3,
+     "mrr_up": 11.1,
+     "mrr_2in": 7.7,
+     "mrr_3in": 13.7,
+     "mrr_inp": 8.0,
+     "mrr_pin": 5.0,
+     "mrr_pni": 5.1,
+     "hits1_A": 12.2,
+     "hits1_Ap": 17.4,
+     "hits1_An": 2.9
+    },
+    "lvsa": {
+     "type": "proposed",
+     "mrr_A": 22.4,
+     "mrr_Ap": 28.8,
+     "mrr_An": 10.9,
+     "mrr_1p": 49.2,
+     "mrr_2p": 15.8,
+     "mrr_3p": 12.1,
+     "mrr_2i": 41.7,
+     "mrr_3i": 55.1,
+     "mrr_pi": 31.0,
+     "mrr_ip": 19.0,
+     "mrr_2u": 22.5,
+     "mrr_up": 12.4,
+     "mrr_2in": 12.4,
+     "mrr_3in": 18.3,
+     "mrr_inp": 8.5,
+     "mrr_pin": 7.3,
+     "mrr_pni": 8.0,
+     "hits1_A": 15.4,
+     "hits1_Ap": 20.8,
+     "hits1_An": 5.5
+    },
+    "lvsa_no_logic": {
+     "type": "baseline",
+     "mrr_An": 7.6,
+     "mrr_2in": 7.4,
+     "mrr_3in": 13.9,
+     "mrr_inp": 7.0,
+     "mrr_pin": 5.1,
+     "mrr_pni": 4.5
+    },
+    "lvsa_wo_lns": {
+     "type": "baseline",
+     "mrr_An": 10.4,
+     "mrr_2in": 12.2,
+     "mrr_3in": 16.5,
+     "mrr_inp": 8.1,
+     "mrr_pin": 6.9,
+     "mrr_pni": 8.4
+    },
+    "vsa_composition": {
+     "type": "baseline"
+    },
+    "symbolic_traversal": {
+     "type": "baseline"
+    },
+    "random": {
+     "type": "baseline"
+    }
+   }
+  },
+  "fb15k237_unobservable": {
+   "description": "Complex query answering on FB15k-237+H (Gregucci et al., 2025): only full-inference answers, whose every reasoning path needs held-out facts, are ranked; partial-inference answers are ignored. Includes the deeper 4p and 4i types. Paper Table VI and Fig. 6.",
+   "notes": "Paper numbers (percent) unchanged; mrr_A is the paper's A_H (average over the 14 standard types). The 4p/4i values are approximate, read off Fig. 6. Gym protocol as in fb15k237_cqa with a fixed sample of up to 1000 test queries per type.",
+   "weight": 0.25,
+   "primary_metric": "mrr_A",
+   "metrics": {
+    "mrr_A": {
+     "higher_is_better": true,
+     "coefficient": 1.0,
+     "description": "Filtered MRR (%) over full-inference answers of FB15k-237+H, averaged over the 14 standard query types."
+    },
+    "mrr_Ap": {
+     "higher_is_better": true,
+     "coefficient": 0.3,
+     "description": "Same, averaged over the 9 positive query types."
+    },
+    "mrr_An": {
+     "higher_is_better": true,
+     "coefficient": 0.3,
+     "description": "Same, averaged over the 5 query types with negation."
+    },
+    "hits1_A": {
+     "higher_is_better": true,
+     "coefficient": 0.3,
+     "description": "Filtered Hits@1 (%) on FB15k-237+H, averaged over the 14 standard query types."
+    },
+    "hits10_A": {
+     "higher_is_better": true,
+     "coefficient": 0.1,
+     "description": "Filtered Hits@10 (%) on FB15k-237+H, averaged over the 14 standard query types."
+    },
+    "mrr_1p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 1p queries."
+    },
+    "mrr_2p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 2p queries."
+    },
+    "mrr_3p": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 3p queries."
+    },
+    "mrr_2i": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 2i queries."
+    },
+    "mrr_3i": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 3i queries."
+    },
+    "mrr_ip": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H ip queries."
+    },
+    "mrr_pi": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H pi queries."
+    },
+    "mrr_2u": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 2u queries."
+    },
+    "mrr_up": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H up queries."
+    },
+    "mrr_2in": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 2in queries."
+    },
+    "mrr_3in": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H 3in queries."
+    },
+    "mrr_inp": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H inp queries."
+    },
+    "mrr_pin": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H pin queries."
+    },
+    "mrr_pni": {
+     "higher_is_better": true,
+     "coefficient": 0.03,
+     "description": "Filtered MRR (%) on FB15k-237+H pni queries."
+    },
+    "mrr_4p": {
+     "higher_is_better": true,
+     "coefficient": 0.1,
+     "description": "Filtered MRR (%) on FB15k-237+H four-hop path queries."
+    },
+    "mrr_4i": {
+     "higher_is_better": true,
+     "coefficient": 0.1,
+     "description": "Filtered MRR (%) on FB15k-237+H four-way intersection queries."
+    }
+   },
+   "results": {
+    "gnn_qe": {
+     "type": "baseline",
+     "mrr_A": 9.2,
+     "mrr_Ap": 12.6,
+     "mrr_An": 3.1,
+     "mrr_4p": 3.8,
+     "mrr_4i": 18.0
+    },
+    "ultraq": {
+     "type": "baseline",
+     "mrr_A": 8.2,
+     "mrr_Ap": 11.4,
+     "mrr_An": 2.4,
+     "mrr_4p": 3.2,
+     "mrr_4i": 13.0
+    },
+    "qto": {
+     "type": "baseline",
+     "mrr_A": 9.7,
+     "mrr_Ap": 12.7,
+     "mrr_An": 4.2,
+     "mrr_4p": 3.0,
+     "mrr_4i": 15.5
+    },
+    "cone": {
+     "type": "baseline",
+     "mrr_A": 8.5,
+     "mrr_Ap": 11.6,
+     "mrr_An": 2.8,
+     "mrr_4p": 3.0,
+     "mrr_4i": 15.8
+    },
+    "clmpt": {
+     "type": "baseline",
+     "mrr_A": 11.3,
+     "mrr_Ap": 15.6,
+     "mrr_An": 3.5,
+     "mrr_4p": 4.0,
+     "mrr_4i": 18.7
+    },
+    "lvsa": {
+     "type": "proposed",
+     "mrr_A": 12.2,
+     "mrr_Ap": 15.7,
+     "mrr_An": 5.8,
+     "mrr_4p": 3.8,
+     "mrr_4i": 21.5
+    },
+    "lvsa_no_logic": {
+     "type": "baseline"
+    },
+    "vsa_composition": {
+     "type": "baseline"
+    },
+    "symbolic_traversal": {
+     "type": "baseline"
+    },
+    "random": {
+     "type": "baseline"
+    }
+   }
+  },
+  "fb15k237_traceability": {
+   "description": "Whether the rankings a method emits for the existential variables of 2p/3p queries identify real intermediate entities on a path to a non-trivial answer, and whether the top intermediate choices and top answer form a valid chain. Paper Table VIII (interpretability / logic fidelity).",
+   "notes": "The paper's Table VIII counts an intermediate entity as valid when the remaining sub-query is satisfiable on the full graph; on partially observable queries that is satisfied by any observed neighbour, so a graph lookup scores near 100%. The gym therefore requires the path to reach a non-trivial (held-out) answer. The paper's numbers are not on this scale and are kept under _paper_table_viii; the lvsa entry holds this gym's reproduced reference values.",
+   "weight": 0.2,
+   "primary_metric": "trace_var_mrr",
+   "metrics": {
+    "trace_var_mrr": {
+     "higher_is_better": true,
+     "coefficient": 1.0,
+     "description": "Mean reciprocal rank (%) of the first valid intermediate entity in each existential variable's ranking (2p V1, 3p V1, 3p V2 averaged); valid = lies on a full-graph path from the anchor to a non-trivial answer."
+    },
+    "trace_var_p1": {
+     "higher_is_better": true,
+     "coefficient": 0.5,
+     "description": "Precision at 1 (%) of the same intermediate rankings."
+    },
+    "trace_path_p1": {
+     "higher_is_better": true,
+     "coefficient": 1.0,
+     "description": "Fraction (%) of 2p/3p queries whose top intermediate entities and top non-trivial answer form a valid full-graph reasoning chain ending at a non-trivial answer (2p and 3p averaged)."
+    }
+   },
+   "results": {
+    "lvsa": {
+     "type": "proposed",
+     "trace_var_mrr": null,
+     "trace_var_p1": null,
+     "trace_path_p1": null
+    },
+    "lvsa_no_logic": {
+     "type": "baseline"
+    },
+    "vsa_composition": {
+     "type": "baseline"
+    },
+    "symbolic_traversal": {
+     "type": "baseline"
+    },
+    "random": {
+     "type": "baseline"
+    }
+   },
+   "_paper_table_viii": {
+    "protocol": "satisfiability of the remaining sub-query on the full graph (paper), FB15k-237, percent; averages over 2p V1, 3p V1, 3p V2 (variable level) and 2p, 3p (path level)",
+    "lvsa": {
+     "variable_mrr": 43.9,
+     "variable_p1": 38.8,
+     "path_p1": 50.3
+    },
+    "clmpt": {
+     "variable_mrr": 38.0,
+     "variable_p1": 31.8,
+     "path_p1": 30.1
+    },
+    "cone": {
+     "variable_mrr": 27.6,
+     "variable_p1": 21.7,
+     "path_p1": 0.4
+    }
+   }
   }
+ },
+ "_paper_efficiency": {
+  "note": "Not scored: the gym metrics may not depend on wall-clock time, and inference cost cannot be recomputed from submitted rankings. Paper Sec. VI-D, FB15k-237 existential positive queries.",
+  "lvsa_vs_clmpt_throughput": "2.6x higher queries per second",
+  "lvsa_vs_cone_throughput": "1.7x higher queries per second",
+  "lvsa_vs_cqd_beam": "matches CQD-Beam MRR for beam 64-256 with 2-15x higher QPS; CQD-Beam runs out of memory for beam >= 512 with k > 2",
+  "complexity": "LVSA O(k d^2 + |V| d) per query versus O(|V|^(k+1) d) for exhaustive grounding"
+ }
 }

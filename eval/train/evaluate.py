@@ -1,235 +1,379 @@
+"""Train-side (public validation) evaluator for the FB15k-237 complex-query gym.
+
+Scores every method directory under ``outputs/`` from its raw ranked entity
+lists on the public validation queries. Nothing a method writes besides those
+integer arrays is read.
+
+Inputs per method ``outputs/<method>/``:
+  valid_std.npz    rank_<type>  [n_type, K] entity ids, best first (14 types)
+                   trace_2p_v1, trace_3p_v1, trace_3p_v2  [n, KT] entity ids
+  valid_hplus.npz  rank_<type>  [n_type, K] (16 types)
+
+Ground truth comes from the public validation files under
+``data/downloads/fb15k237`` (validation answers and the train+valid graph).
+Ranks are filtered: an answer's rank counts only the non-answer entities
+listed above it; entities that are benchmark easy answers or that are already
+reachable on the observed (training) graph are ignored wherever they appear.
+Answers not listed count as reciprocal rank 0.
+
+Failure rules match the hidden test: any present array with a wrong shape,
+non-integer dtype, out-of-range or repeated id fails the method (worst value
+for every metric); a missing file or ranking array gives worst values for that
+experiment; missing trace arrays give worst trace values.
+
+Standard library only.
+"""
+
 from __future__ import annotations
 
 import argparse
-import hashlib
+import array
+import ast
 import json
-from collections import Counter, defaultdict
+import math
+import struct
+import sys
+import zipfile
+from collections import defaultdict
 from pathlib import Path
 
-
-SLICE = "train"
-EXPERIMENT = "scaled_synthetic_cqa"
-
-
-def read_jsonl(path: Path) -> list[dict]:
-    with path.open() as f:
-        return [json.loads(line) for line in f]
-
-
-def comparable_query(query: dict) -> dict:
-    return {
-        "type": query.get("type"),
-        "anchors": query.get("anchors"),
-        "relations": query.get("relations"),
-    }
+STD_TYPES = ["1p", "2p", "3p", "2i", "3i", "ip", "pi", "2u", "up", "2in", "3in", "inp", "pin", "pni"]
+EPFO_TYPES = ["1p", "2p", "3p", "2i", "3i", "ip", "pi", "2u", "up"]
+NEG_TYPES = ["2in", "3in", "inp", "pin", "pni"]
+HPLUS_TYPES = STD_TYPES + ["4p", "4i"]
+EXP_STD = "fb15k237_cqa"
+EXP_HPLUS = "fb15k237_unobservable"
+EXP_TRACE = "fb15k237_traceability"
+STD_METRICS = ["mrr_A", "mrr_Ap", "mrr_An", "hits1_A", "hits1_Ap", "hits1_An", "hits3_A", "hits10_A"] + [f"mrr_{t}" for t in STD_TYPES]
+HPLUS_METRICS = ["mrr_A", "mrr_Ap", "mrr_An", "hits1_A", "hits10_A"] + [f"mrr_{t}" for t in HPLUS_TYPES]
+TRACE_METRICS = ["trace_var_mrr", "trace_var_p1", "trace_path_p1"]
+TRACE_KEYS = {"2p": ["trace_2p_v1"], "3p": ["trace_3p_v1", "trace_3p_v2"]}
+SPLIT_FILES = {"std": "valid_std.npz", "hplus": "valid_hplus.npz"}
 
 
-def split_indices(rows: list[dict]) -> list[int]:
-    """Visible stratified slice with a guard band before the held-out pool."""
-    groups: dict[str, list[tuple[str, int]]] = defaultdict(list)
-    for idx, row in enumerate(rows):
-        qtype = row["query"]["type"]
-        key = json.dumps(
-            {"query": comparable_query(row["query"]), "answers": row.get("answers", [])},
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
-        groups[qtype].append((digest, idx))
-
-    selected = []
-    for qtype in sorted(groups):
-        ordered = sorted(groups[qtype])
-        cutoff = max(1, (len(ordered) * 2) // 5)
-        selected.extend(idx for _, idx in ordered[:cutoff])
-    return sorted(selected)
+class InvalidPrediction(Exception):
+    pass
 
 
-def subset_predictions(pred_rows: list[dict], truth_rows: list[dict], indices: list[int]) -> list[dict]:
-    if len(pred_rows) == len(truth_rows):
-        return [pred_rows[idx] for idx in indices]
-    if len(pred_rows) == len(indices):
-        return pred_rows
-    raise ValueError(
-        f"prediction row count {len(pred_rows)} matches neither full truth count "
-        f"{len(truth_rows)} nor {SLICE} slice count {len(indices)}"
-    )
+# ----------------------------------------------------------------- npy reading
+_TYPECODES = {
+    "|i1": ("b", 1), "<i1": ("b", 1), "|u1": ("B", 1), "<u1": ("B", 1),
+    "<i2": ("h", 2), "<u2": ("H", 2), "<i4": ("i", 4), "<u4": ("I", 4),
+    "<i8": ("q", 8), "<u8": ("Q", 8),
+}
 
 
-def score_rows(pred_rows: list[dict], truth_rows: list[dict], full_entity_count: int) -> dict:
-    if len(pred_rows) != len(truth_rows):
-        raise ValueError(f"prediction row count {len(pred_rows)} does not match truth row count {len(truth_rows)}")
-    reciprocal = []
-    hits1 = []
-    hits10 = []
-    by_type: dict[str, list[float]] = defaultdict(list)
-    for idx, (pred, truth) in enumerate(zip(pred_rows, truth_rows)):
-        if "query" in pred and comparable_query(pred["query"]) != comparable_query(truth["query"]):
-            raise ValueError(f"prediction query mismatch at {SLICE} row {idx}")
-        answers = set(truth["answers"])
-        ranking = list(pred.get("ranking", []))
-        rank = None
-        for rank_idx, ent in enumerate(ranking, start=1):
-            if ent in answers:
-                rank = rank_idx
-                break
-        if rank is None:
-            rank = full_entity_count + 1
-        reciprocal.append(1.0 / rank)
-        hits1.append(1.0 if rank <= 1 else 0.0)
-        hits10.append(1.0 if rank <= 10 else 0.0)
-        by_type[truth["query"]["type"]].append(1.0 / rank)
-
-    metrics = {
-        "mrr": sum(reciprocal) / max(1, len(reciprocal)),
-        "hits1": sum(hits1) / max(1, len(hits1)),
-        "hits10": sum(hits10) / max(1, len(hits10)),
-    }
-    for qtype, vals in sorted(by_type.items()):
-        metrics[f"mrr_{qtype}"] = sum(vals) / len(vals)
-    return metrics
-
-
-def load_adjacency(path: Path):
-    adj = defaultdict(lambda: defaultdict(set))
-    with path.open() as f:
-        for line in f:
-            h, r, t = line.rstrip("\n").split("\t")
-            adj[r][int(h)].add(int(t))
-    return adj
+def parse_npy(raw: bytes, name: str):
+    if raw[:6] != b"\x93NUMPY":
+        raise InvalidPrediction(f"{name}: not a .npy array")
+    major = raw[6]
+    if major == 1:
+        hlen, off = struct.unpack("<H", raw[8:10])[0], 10
+    elif major in (2, 3):
+        hlen, off = struct.unpack("<I", raw[8:12])[0], 12
+    else:
+        raise InvalidPrediction(f"{name}: unsupported npy version")
+    try:
+        header = ast.literal_eval(raw[off : off + hlen].decode("latin1"))
+        descr, fortran, shape = header["descr"], bool(header["fortran_order"]), tuple(int(s) for s in header["shape"])
+    except Exception as exc:  # noqa: BLE001
+        raise InvalidPrediction(f"{name}: bad npy header ({exc})")
+    if descr not in _TYPECODES:
+        raise InvalidPrediction(f"{name}: dtype {descr!r} is not an integer type")
+    code, size = _TYPECODES[descr]
+    count = 1
+    for s in shape:
+        count *= s
+    body = raw[off + hlen :]
+    if len(body) != count * size:
+        raise InvalidPrediction(f"{name}: payload size does not match shape {shape}")
+    arr = array.array(code)
+    if arr.itemsize != size:
+        raise InvalidPrediction(f"{name}: platform integer size mismatch")
+    arr.frombytes(body)
+    if fortran and len(shape) == 2:
+        n, k = shape
+        arr = array.array(code, (arr[j * n + i] for i in range(n) for j in range(k)))
+    return arr, shape
 
 
-def path_answers(adj, heads, relation):
-    out = set()
-    for h in heads:
-        out.update(adj[relation].get(h, set()))
+def read_npz(path: Path) -> dict:
+    """Return {key: (raw_bytes_loader)}; raises InvalidPrediction on corrupt archives."""
+    try:
+        zf = zipfile.ZipFile(path)
+        names = zf.namelist()
+    except Exception as exc:  # noqa: BLE001
+        raise InvalidPrediction(f"{path.name}: unreadable archive ({exc})")
+    out = {}
+    for member in names:
+        if not member.endswith(".npy"):
+            continue
+        key = member[:-4]
+        try:
+            raw = zf.read(member)
+        except Exception as exc:  # noqa: BLE001
+            raise InvalidPrediction(f"{path.name}/{member}: unreadable ({exc})")
+        out[key] = parse_npy(raw, f"{path.name}/{member}")
     return out
 
 
-def rank_of_any(ranking, valid, full_entity_count: int) -> int:
-    for idx, entity in enumerate(ranking, start=1):
-        if entity in valid:
-            return idx
-    return full_entity_count + 1
+def read_npy_file(path: Path):
+    return parse_npy(path.read_bytes(), path.name)
 
 
-def add_trace_metrics(metrics: dict, pred_rows: list[dict], truth_rows: list[dict], full_entity_count: int, triples_path: Path) -> None:
-    if not triples_path.exists():
-        return
-    adj = load_adjacency(triples_path)
-    variable_rr = []
-    variable_p1 = []
-    path_p1 = []
-    for pred, truth in zip(pred_rows, truth_rows):
-        trace = pred.get("trace") or {}
-        q = truth["query"]
-        qtype = q["type"]
-        rels = q["relations"]
-        if qtype == "2p" and "v1_ranking" in trace:
-            h = q["anchors"][0]
-            valid_v1 = {
-                v1
-                for v1 in adj[rels[0]].get(h, set())
-                if adj[rels[1]].get(v1, set()) & set(truth["answers"])
-            }
-            rank = rank_of_any(trace["v1_ranking"], valid_v1, full_entity_count)
-            variable_rr.append(1.0 / rank)
-            variable_p1.append(1.0 if rank == 1 else 0.0)
-            pred_v1 = trace["v1_ranking"][0]
-            pred_answer = pred.get("ranking", [None])[0] if pred.get("ranking") else None
-            path_p1.append(1.0 if pred_v1 in valid_v1 and pred_answer in adj[rels[1]].get(pred_v1, set()) else 0.0)
-        elif qtype == "3p" and "v1_ranking" in trace and "v2_ranking" in trace:
-            h = q["anchors"][0]
-            answer_set = set(truth["answers"])
-            valid_v2 = {
-                v2
-                for v1 in adj[rels[0]].get(h, set())
-                for v2 in adj[rels[1]].get(v1, set())
-                if adj[rels[2]].get(v2, set()) & answer_set
-            }
-            valid_v1 = {
-                v1
-                for v1 in adj[rels[0]].get(h, set())
-                if path_answers(adj, adj[rels[1]].get(v1, set()), rels[2]) & answer_set
-            }
-            for key, valid in [("v1_ranking", valid_v1), ("v2_ranking", valid_v2)]:
-                rank = rank_of_any(trace[key], valid, full_entity_count)
-                variable_rr.append(1.0 / rank)
-                variable_p1.append(1.0 if rank == 1 else 0.0)
-            pred_v1 = trace["v1_ranking"][0]
-            pred_v2 = trace["v2_ranking"][0]
-            pred_answer = pred.get("ranking", [None])[0] if pred.get("ranking") else None
-            ok = (
-                pred_v1 in adj[rels[0]].get(h, set())
-                and pred_v2 in adj[rels[1]].get(pred_v1, set())
-                and pred_answer in adj[rels[2]].get(pred_v2, set())
-            )
-            path_p1.append(1.0 if ok else 0.0)
-
-    has_path_queries = any(row["query"]["type"] in {"2p", "3p"} for row in truth_rows)
-    if variable_rr:
-        metrics["trace_variable_mrr"] = sum(variable_rr) / len(variable_rr)
-        metrics["trace_variable_p1"] = sum(variable_p1) / len(variable_p1)
-    elif has_path_queries:
-        metrics["trace_variable_mrr"] = 0.0
-        metrics["trace_variable_p1"] = 0.0
-    if path_p1:
-        metrics["trace_path_p1"] = sum(path_p1) / len(path_p1)
-    elif has_path_queries:
-        metrics["trace_path_p1"] = 0.0
+def rows_of(arr, shape, n_entities: int, expected_rows: int, name: str):
+    if len(shape) != 2:
+        raise InvalidPrediction(f"{name}: expected a 2-D array, got shape {shape}")
+    n, k = shape
+    if n != expected_rows:
+        raise InvalidPrediction(f"{name}: expected {expected_rows} rows, got {n}")
+    if k < 1 or k > n_entities:
+        raise InvalidPrediction(f"{name}: list length {k} outside [1, {n_entities}]")
+    rows = []
+    for i in range(n):
+        row = arr[i * k : (i + 1) * k]
+        if min(row) < 0 or max(row) >= n_entities:
+            raise InvalidPrediction(f"{name}: entity id out of range in row {i}")
+        if len(set(row)) != k:
+            raise InvalidPrediction(f"{name}: repeated entity id in row {i}")
+        rows.append(row)
+    return rows
 
 
-def write_manifest(path: Path | None, names: list[str], predictions: list[str], truth: Path, indices: list[int], rows: list[dict]) -> None:
-    if path is None:
-        return
-    selected_counts = Counter(rows[idx]["query"]["type"] for idx in indices)
-    payload = {
-        "slice": SLICE,
-        "experiment": EXPERIMENT,
-        "truth": str(truth),
-        "num_examples": len(indices),
-        "query_type_counts": dict(sorted(selected_counts.items())),
-        "methods": [{"name": name, "predictions": pred} for name, pred in zip(names, predictions)],
+# ----------------------------------------------------------------- truth
+def csr_sets(arrays: dict, prefix: str) -> list:
+    indptr, _ = arrays[prefix + "_indptr"]
+    indices, _ = arrays[prefix + "_indices"]
+    return [set(indices[indptr[i] : indptr[i + 1]]) for i in range(len(indptr) - 1)]
+
+
+def load_truth(data_dir: Path, bench: str, types: list) -> dict:
+    arrays = read_npz(data_dir / f"valid_{bench}.npz")
+    truth = {}
+    for t in types:
+        q, shape = arrays[f"q_{t}"]
+        width = shape[1]
+        truth[t] = {
+            "queries": [list(q[i * width : (i + 1) * width]) for i in range(shape[0])],
+            "hard": csr_sets(arrays, f"hard_{t}"),
+            "filt": csr_sets(arrays, f"filt_{t}"),
+        }
+    return truth
+
+
+def load_graph(data_dir: Path) -> dict:
+    """Graph in which validation answers hold: training plus validation triples."""
+    adj = defaultdict(set)
+    for name in ("train_triples.npy", "valid_triples.npy"):
+        arr, shape = read_npy_file(data_dir / name)
+        for i in range(shape[0]):
+            adj[(arr[3 * i], arr[3 * i + 1])].add(arr[3 * i + 2])
+    return dict(adj)
+
+
+# ----------------------------------------------------------------- metrics
+def rank_metrics(rows: list, hard: list, filt: list) -> dict:
+    mrr = h1 = h3 = h10 = 0.0
+    for row, answers, ignored in zip(rows, hard, filt):
+        remaining = len(answers)
+        negatives = 0
+        rr = c1 = c3 = c10 = 0.0
+        for e in row:
+            if e in answers:
+                rank = negatives + 1
+                rr += 1.0 / rank
+                c1 += rank <= 1
+                c3 += rank <= 3
+                c10 += rank <= 10
+                remaining -= 1
+                if remaining == 0:
+                    break
+            elif e not in ignored:
+                negatives += 1
+        n = len(answers)
+        mrr += rr / n
+        h1 += c1 / n
+        h3 += c3 / n
+        h10 += c10 / n
+    q = max(1, len(rows))
+    return {"mrr": 100 * mrr / q, "hits1": 100 * h1 / q, "hits3": 100 * h3 / q, "hits10": 100 * h10 / q}
+
+
+def mean(values) -> float:
+    values = list(values)
+    return sum(values) / len(values) if values else 0.0
+
+
+def first_unfiltered(row, ignored):
+    for e in row:
+        if e not in ignored:
+            return e
+    return None
+
+
+def trace_metrics(truth: dict, preds: dict, adj: dict, n_entities: int) -> dict:
+    empty = set()
+    res = {}
+    t2 = truth["2p"]
+    trace = rows_of(*preds["trace_2p_v1"], n_entities, len(t2["queries"]), "trace_2p_v1")
+    answers = rows_of(*preds["rank_2p"], n_entities, len(t2["queries"]), "rank_2p")
+    rr, p1, path = [], [], []
+    for q, hard, ignored, tr, ans in zip(t2["queries"], t2["hard"], t2["filt"], trace, answers):
+        a0, r0, r1 = q
+        first = adj.get((a0, r0), empty)
+        valid = {e for e in first if adj.get((e, r1), empty) & hard}
+        rr.append(next((1.0 / (i + 1) for i, e in enumerate(tr) if e in valid), 0.0))
+        p1.append(1.0 if tr[0] in valid else 0.0)
+        top = first_unfiltered(ans, ignored)
+        path.append(1.0 if top in hard and tr[0] in first and top in adj.get((tr[0], r1), empty) else 0.0)
+    res["2p_v1"] = (mean(rr), mean(p1))
+    path_2p = mean(path)
+
+    t3 = truth["3p"]
+    tr1 = rows_of(*preds["trace_3p_v1"], n_entities, len(t3["queries"]), "trace_3p_v1")
+    tr2 = rows_of(*preds["trace_3p_v2"], n_entities, len(t3["queries"]), "trace_3p_v2")
+    answers = rows_of(*preds["rank_3p"], n_entities, len(t3["queries"]), "rank_3p")
+    rr1, p11, rr2, p12, path = [], [], [], [], []
+    for q, hard, ignored, v1, v2, ans in zip(t3["queries"], t3["hard"], t3["filt"], tr1, tr2, answers):
+        a0, r0, r1, r2 = q
+        first = adj.get((a0, r0), empty)
+        second = set()
+        for e in first:
+            second |= adj.get((e, r1), empty)
+        valid2 = {e for e in second if adj.get((e, r2), empty) & hard}
+        valid1 = {e for e in first if adj.get((e, r1), empty) & valid2}
+        rr1.append(next((1.0 / (i + 1) for i, e in enumerate(v1) if e in valid1), 0.0))
+        p11.append(1.0 if v1[0] in valid1 else 0.0)
+        rr2.append(next((1.0 / (i + 1) for i, e in enumerate(v2) if e in valid2), 0.0))
+        p12.append(1.0 if v2[0] in valid2 else 0.0)
+        top = first_unfiltered(ans, ignored)
+        ok = top in hard and v1[0] in first and v2[0] in adj.get((v1[0], r1), empty) and top in adj.get((v2[0], r2), empty)
+        path.append(1.0 if ok else 0.0)
+    res["3p_v1"] = (mean(rr1), mean(p11))
+    res["3p_v2"] = (mean(rr2), mean(p12))
+    return {
+        "trace_var_mrr": 100 * mean(v[0] for v in res.values()),
+        "trace_var_p1": 100 * mean(v[1] for v in res.values()),
+        "trace_path_p1": 100 * mean([path_2p, mean(path)]),
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2) + "\n")
+
+
+def worst(metrics: list) -> dict:
+    return {m: 0.0 for m in metrics}
+
+
+def score_benchmark(truth: dict, preds: dict, types: list, n_entities: int) -> dict:
+    per_type = {}
+    for t in types:
+        key = f"rank_{t}"
+        if key not in preds:
+            raise KeyError(key)
+        rows = rows_of(*preds[key], n_entities, len(truth[t]["queries"]), key)
+        per_type[t] = rank_metrics(rows, truth[t]["hard"], truth[t]["filt"])
+    return per_type
+
+
+def validate_all(preds: dict, truth: dict, n_entities: int, file_name: str) -> None:
+    """Every array that is present must be a valid ranking table."""
+    for key, (arr, shape) in preds.items():
+        if key.startswith("rank_"):
+            t = key[len("rank_") :]
+            if t not in truth:
+                raise InvalidPrediction(f"{file_name}: unknown array {key}")
+            rows_of(arr, shape, n_entities, len(truth[t]["queries"]), f"{file_name}/{key}")
+        elif key.startswith("trace_"):
+            t = key.split("_")[1]
+            if key not in TRACE_KEYS.get(t, []):
+                raise InvalidPrediction(f"{file_name}: unknown array {key}")
+            rows_of(arr, shape, n_entities, len(truth[t]["queries"]), f"{file_name}/{key}")
+
+
+def score_method(method_dir: Path, truth: dict, adj: dict, n_entities: int):
+    status = []
+    preds = {}
+    for bench, fname in SPLIT_FILES.items():
+        path = method_dir / fname
+        if path.is_file():
+            preds[bench] = read_npz(path)
+            validate_all(preds[bench], truth[bench], n_entities, fname)
+        else:
+            status.append(f"missing {fname}")
+
+    results = {EXP_STD: worst(STD_METRICS), EXP_HPLUS: worst(HPLUS_METRICS), EXP_TRACE: worst(TRACE_METRICS)}
+    if "std" in preds:
+        try:
+            pt = score_benchmark(truth["std"], preds["std"], STD_TYPES, n_entities)
+            r = {
+                "mrr_A": mean(pt[t]["mrr"] for t in STD_TYPES),
+                "mrr_Ap": mean(pt[t]["mrr"] for t in EPFO_TYPES),
+                "mrr_An": mean(pt[t]["mrr"] for t in NEG_TYPES),
+                "hits1_A": mean(pt[t]["hits1"] for t in STD_TYPES),
+                "hits1_Ap": mean(pt[t]["hits1"] for t in EPFO_TYPES),
+                "hits1_An": mean(pt[t]["hits1"] for t in NEG_TYPES),
+                "hits3_A": mean(pt[t]["hits3"] for t in STD_TYPES),
+                "hits10_A": mean(pt[t]["hits10"] for t in STD_TYPES),
+            }
+            r.update({f"mrr_{t}": pt[t]["mrr"] for t in STD_TYPES})
+            results[EXP_STD] = r
+        except KeyError as exc:
+            status.append(f"valid_std.npz lacks {exc.args[0]}")
+        if all(k in preds["std"] for k in ("trace_2p_v1", "trace_3p_v1", "trace_3p_v2", "rank_2p", "rank_3p")):
+            results[EXP_TRACE] = trace_metrics(truth["std"], preds["std"], adj, n_entities)
+        else:
+            status.append("valid_std.npz lacks trace arrays")
+    if "hplus" in preds:
+        try:
+            pt = score_benchmark(truth["hplus"], preds["hplus"], HPLUS_TYPES, n_entities)
+            r = {
+                "mrr_A": mean(pt[t]["mrr"] for t in STD_TYPES),
+                "mrr_Ap": mean(pt[t]["mrr"] for t in EPFO_TYPES),
+                "mrr_An": mean(pt[t]["mrr"] for t in NEG_TYPES),
+                "hits1_A": mean(pt[t]["hits1"] for t in STD_TYPES),
+                "hits10_A": mean(pt[t]["hits10"] for t in STD_TYPES),
+            }
+            r.update({f"mrr_{t}": pt[t]["mrr"] for t in HPLUS_TYPES})
+            results[EXP_HPLUS] = r
+        except KeyError as exc:
+            status.append(f"valid_hplus.npz lacks {exc.args[0]}")
+    return results, ("ok" if not status else "partial: " + "; ".join(status))
+
+
+def clean(value: float) -> float:
+    if not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0 or value > 100:
+        raise InvalidPrediction(f"impossible metric value {value!r}")
+    return round(float(value), 6)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--predictions", nargs="+", required=True)
-    parser.add_argument("--names", nargs="+", required=True)
-    parser.add_argument("--meta", type=Path, default=Path("data/synthetic/meta.json"))
-    parser.add_argument("--truth", type=Path, default=Path("data/synthetic/test.jsonl"))
-    parser.add_argument("--triples", type=Path, default=Path("data/synthetic/triples.tsv"))
+    parser.add_argument("--outputs", type=Path, default=Path("outputs"))
+    parser.add_argument("--data", type=Path, default=Path("data/downloads/fb15k237"))
     parser.add_argument("--out", type=Path, default=Path("scoring/scores_train.json"))
-    parser.add_argument("--manifest-out", type=Path, default=Path("tmp/eval_train_inputs.json"))
     args = parser.parse_args()
-    if len(args.predictions) != len(args.names):
-        raise SystemExit("--predictions and --names must have equal length")
 
-    meta = json.loads(args.meta.read_text())
-    truth_rows = read_jsonl(args.truth)
-    indices = split_indices(truth_rows)
-    truth_slice = [truth_rows[idx] for idx in indices]
-    results = {}
-    for name, pred in zip(args.names, args.predictions):
-        path = Path(pred)
-        rows = subset_predictions(read_jsonl(path), truth_rows, indices)
-        metrics = score_rows(rows, truth_slice, int(meta["num_entities"]))
-        add_trace_metrics(metrics, rows, truth_slice, int(meta["num_entities"]), args.triples)
-        meta_path = path.with_suffix(".meta.json")
-        if meta_path.exists():
-            run_meta = json.loads(meta_path.read_text())
-            metrics["param_count_k"] = run_meta.get("param_count", 0) / 1000.0
-        results[name] = metrics
+    meta = json.loads((args.data / "meta.json").read_text())
+    n_entities = int(meta["num_entities"])
+    truth = {"std": load_truth(args.data, "std", STD_TYPES), "hplus": load_truth(args.data, "hplus", HPLUS_TYPES)}
+    adj = load_graph(args.data)
 
-    payload = {"experiments": {EXPERIMENT: {"results": results}}}
+    methods = sorted(p.name for p in args.outputs.iterdir() if p.is_dir() and not p.name.startswith(".")) if args.outputs.is_dir() else []
+    payload = {"experiments": {EXP_STD: {"results": {}}, EXP_HPLUS: {"results": {}}, EXP_TRACE: {"results": {}}}, "_status": {}}
+    for name in methods:
+        try:
+            results, status = score_method(args.outputs / name, truth, adj, n_entities)
+            results = {exp: {m: clean(v) for m, v in vals.items()} for exp, vals in results.items()}
+        except (InvalidPrediction, Exception) as exc:  # noqa: BLE001 - any failure scores as failed
+            results = {EXP_STD: worst(STD_METRICS), EXP_HPLUS: worst(HPLUS_METRICS), EXP_TRACE: worst(TRACE_METRICS)}
+            status = f"failed: {type(exc).__name__}: {exc}"
+        for exp, vals in results.items():
+            payload["experiments"][exp]["results"][name] = vals
+        payload["_status"][name] = status
+        print(f"{name}: {status}", flush=True)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(payload, indent=2) + "\n")
-    write_manifest(args.manifest_out, args.names, args.predictions, args.truth, indices, truth_rows)
-    print(json.dumps(payload, indent=2))
+    args.out.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
+    print(json.dumps({exp: {m: {k: v for k, v in vals.items() if k in ('mrr_A', 'trace_var_mrr', 'trace_path_p1')} for m, vals in d['results'].items()} for exp, d in payload['experiments'].items()}, indent=1))
 
 
 if __name__ == "__main__":
+    sys.setrecursionlimit(10000)
     main()
