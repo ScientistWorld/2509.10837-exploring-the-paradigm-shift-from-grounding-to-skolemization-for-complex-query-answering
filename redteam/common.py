@@ -34,6 +34,7 @@ CASES = [
     'shortcut_ground_truth_constant', 'shortcut_reported_fields',
     'shortcut_empty', 'shortcut_null', 'shortcut_nonfinite',
     'shortcut_hide_failure',
+    'better_graph_pretraining', 'weaker_constant',
 ]
 
 
@@ -185,7 +186,23 @@ def generate(name, folder, pred):
     truth = read_rows(ROOT / 'data/synthetic/test.jsonl')
     n = json.loads((ROOT / 'data/synthetic/meta.json').read_text())['num_entities']
     diagnostics = {'candidate': name, 'num_queries': len(truth)}
-    if name in TRAINING:
+    if name == 'better_graph_pretraining':
+        artifacts = folder / 'artifacts'
+        artifacts.mkdir(exist_ok=True)
+        checkpoint = artifacts / 'model.pt'
+        cached = artifacts / 'predictions.jsonl'
+        if not checkpoint.exists() and command(
+                ['python', '-m', 'redteam.better_graph_pretraining.train', '--out', checkpoint],
+                folder / 'training.log'):
+            raise RuntimeError('graph pretraining failed')
+        if not cached.exists() and command(
+                ['python', 'method/predict.py', '--checkpoint', checkpoint, '--out', cached],
+                folder / 'prediction.log'):
+            raise RuntimeError('graph pretrained prediction failed')
+        copy_predictions(cached, pred)
+        diagnostics['training'] = {'seed': 11, 'stage1': 200, 'stage2': 60, 'stage3': 30,
+            'stage1_data': 'provided graph triples and their inverse relations; no test answers'}
+    elif name in TRAINING:
         copy_predictions(train_variant(name), pred)
         diagnostics['training'] = dict(zip(['seed', 'stage1', 'stage2', 'stage3'], TRAINING[name]))
     elif name in ('reference_existing', 'ablation_existing'):
@@ -267,6 +284,9 @@ def generate(name, folder, pred):
         for row in truth:
             row['answers'] = [0]
         write_rows(ROOT / 'data/synthetic/test.jsonl', truth)
+        write_rows(pred, [{'ranking': [0]} for _ in truth])
+        write_json(pred.with_suffix('.meta.json'), {'param_count': 0})
+    elif name == 'weaker_constant':
         write_rows(pred, [{'ranking': [0]} for _ in truth])
         write_json(pred.with_suffix('.meta.json'), {'param_count': 0})
     elif name == 'shortcut_reported_fields':
