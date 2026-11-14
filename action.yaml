@@ -1,2 +1,8 @@
-action: done
-notes: "Completed 23-case gym audit: genuine quality ordering, three-seed spread, nine paying shortcuts, task-fidelity failures, and restored gym files"
+# Once you set action to 'submit' or 'done', STOP immediately.
+# Do NOT sleep, poll, or wait for jobs. The system reads this file
+# only after your turn ends.
+action: pending
+gpus: 0
+test: false
+milestone: secondary_claims
+notes: ""
