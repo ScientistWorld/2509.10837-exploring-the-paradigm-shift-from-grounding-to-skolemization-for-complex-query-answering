@@ -1,0 +1,22 @@
+{
+  "experiments": {
+    "scaled_synthetic_cqa": {
+      "results": {
+        "candidate": {
+          "mrr": 0.7582119300126989,
+          "hits1": 0.7050359712230215,
+          "hits10": 0.8776978417266187,
+          "mrr_1p": 1.0,
+          "mrr_2i": 1.0,
+          "mrr_2in": 1.0,
+          "mrr_2p": 0.6112822532430031,
+          "mrr_3p": 0.30457123939458314,
+          "trace_variable_mrr": 0.43489673832570513,
+          "trace_variable_p1": 0.3279569892473118,
+          "trace_path_p1": 0.1693548387096774,
+          "param_count_k": 252.416
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
 action: submit
 gpus: 0
 test: false
-notes: "Run bundled redteam audit: three reference seeds, longer/weaker training, baseline/ablation and 13 shortcut cases through no-argument hidden test"
+notes: "Follow-up audit: stronger LVSA graph/inverse pretraining, canonical constant-output baseline, and data-effect diagnostics; then recompute normalized audit ranks"

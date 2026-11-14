@@ -1,0 +1,34 @@
+{
+  "full_file": {
+    "queries": 700,
+    "types": {
+      "2p": 156,
+      "1p": 138,
+      "2in": 93,
+      "2i": 156,
+      "3p": 157
+    },
+    "labels_exactly_answerable_from_supplied_graph": 700,
+    "negated_queries": 93,
+    "negation_changes_answer_set": 0,
+    "multi_answer_queries": 420,
+    "labeled_answers": 1817,
+    "queries_also_present_in_training": 164
+  },
+  "hidden_test": {
+    "queries": 283,
+    "types": {
+      "2p": 63,
+      "1p": 56,
+      "2i": 63,
+      "3p": 63,
+      "2in": 38
+    },
+    "labels_exactly_answerable_from_supplied_graph": 283,
+    "negated_queries": 38,
+    "negation_changes_answer_set": 0,
+    "multi_answer_queries": 166,
+    "labeled_answers": 715,
+    "queries_also_present_in_training": 63
+  }
+}

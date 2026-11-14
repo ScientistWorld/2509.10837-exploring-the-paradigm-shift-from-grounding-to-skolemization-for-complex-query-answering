@@ -1,0 +1,17 @@
+{
+  "candidate": "better_graph_pretraining",
+  "num_queries": 700,
+  "training": {
+    "seed": 11,
+    "stage1": 200,
+    "stage2": 60,
+    "stage3": 30,
+    "stage1_data": "provided graph triples and their inverse relations; no test answers"
+  },
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 154.24936316302046,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}
