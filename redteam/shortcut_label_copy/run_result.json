@@ -1,0 +1,13 @@
+{
+  "candidate": "shortcut_label_copy",
+  "num_queries": 700,
+  "elapsed_seconds": 0.009107863996177912,
+  "ranked_answers": 700,
+  "all_labeled_answers": 1817,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 0.43940723198466003,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

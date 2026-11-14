@@ -1,0 +1,16 @@
+{
+  "candidate": "weaker_no_path_training",
+  "num_queries": 700,
+  "training": {
+    "seed": 11,
+    "stage1": 18,
+    "stage2": 0,
+    "stage3": 10
+  },
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 27.635809821018483,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

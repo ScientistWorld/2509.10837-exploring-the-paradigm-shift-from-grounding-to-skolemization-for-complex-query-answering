@@ -1,0 +1,22 @@
+{
+  "experiments": {
+    "scaled_synthetic_cqa": {
+      "results": {
+        "candidate": {
+          "mrr": 1.0,
+          "hits1": 1.0,
+          "hits10": 1.0,
+          "mrr_1p": 1.0,
+          "mrr_2i": 1.0,
+          "mrr_2in": 1.0,
+          "mrr_2p": 1.0,
+          "mrr_3p": 1.0,
+          "trace_variable_mrr": 1.0,
+          "trace_variable_p1": 1.0,
+          "trace_path_p1": 1.0,
+          "param_count_k": 0.0
+        }
+      }
+    }
+  }
+}

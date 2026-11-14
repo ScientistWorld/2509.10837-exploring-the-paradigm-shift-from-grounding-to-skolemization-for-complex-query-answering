@@ -1,0 +1,16 @@
+{
+  "candidate": "better_more_training",
+  "num_queries": 700,
+  "training": {
+    "seed": 11,
+    "stage1": 54,
+    "stage2": 54,
+    "stage3": 30
+  },
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 150.79266815900337,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

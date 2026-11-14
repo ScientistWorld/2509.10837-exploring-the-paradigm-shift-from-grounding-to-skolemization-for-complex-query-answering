@@ -1,0 +1,12 @@
+{
+  "candidate": "shortcut_selective_traces",
+  "num_queries": 700,
+  "emitted_path_traces": 75,
+  "total_path_queries": 313,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 0.37052911502541974,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "candidate": "shortcut_bruteforce",
+  "num_queries": 700,
+  "elapsed_seconds": 0.610409325978253,
+  "ranked_answers": 1817,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 0.9717046460136771,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "candidate": "shortcut_hide_failure",
+  "num_queries": 700,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 0.3996925450046547,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl",
+    "shortcut_failed_predictions.jsonl"
+  ]
+}

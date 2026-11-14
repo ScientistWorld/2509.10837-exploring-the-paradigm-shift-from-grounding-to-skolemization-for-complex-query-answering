@@ -1,0 +1,19 @@
+{
+  "slice": "test",
+  "experiment": "scaled_synthetic_cqa",
+  "truth": "data/synthetic/test.jsonl",
+  "num_examples": 283,
+  "query_type_counts": {
+    "1p": 56,
+    "2i": 63,
+    "2in": 38,
+    "2p": 63,
+    "3p": 63
+  },
+  "methods": [
+    {
+      "name": "candidate",
+      "predictions": "/home/user/outputs/candidate_predictions.jsonl"
+    }
+  ]
+}

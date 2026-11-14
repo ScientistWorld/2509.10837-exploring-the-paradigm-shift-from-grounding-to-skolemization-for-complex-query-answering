@@ -1,0 +1,10 @@
+{
+  "candidate": "shortcut_graph_replace",
+  "num_queries": 700,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 4.257857660995796,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

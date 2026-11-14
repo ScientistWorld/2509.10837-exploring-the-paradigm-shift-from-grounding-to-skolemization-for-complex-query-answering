@@ -1,0 +1,10 @@
+{
+  "candidate": "ablation_existing",
+  "num_queries": 700,
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 0.4123446079902351,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}

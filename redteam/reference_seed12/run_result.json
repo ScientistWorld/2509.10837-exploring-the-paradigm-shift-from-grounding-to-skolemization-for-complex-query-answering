@@ -1,0 +1,16 @@
+{
+  "candidate": "reference_seed12",
+  "num_queries": 700,
+  "training": {
+    "seed": 12,
+    "stage1": 18,
+    "stage2": 18,
+    "stage3": 10
+  },
+  "train_exit_code": 0,
+  "test_exit_code": 0,
+  "total_seconds": 56.556761501997244,
+  "prediction_files_on_disk": [
+    "candidate_predictions.jsonl"
+  ]
+}
