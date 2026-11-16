@@ -1,0 +1,372 @@
+{
+ "rank_rule": "Summarise hidden-test results of the hardening cases.\n\nRank change of a method relative to the reference ``lvsa``:\n    sum_exp weight_exp * sum_metric |coef| * dir * (value - value_ref) / spread_metric\nwith dir from ``higher_is_better`` and spread = population standard deviation of\nthe metric across the honest cohort (reference, seed replicate, variants and\nbaselines). This mirrors the ranking rule; the future cohort is unknown, so the\nnumbers are illustrative.",
+ "cohort": [
+  "lvsa",
+  "lvsa_seed2",
+  "lvsa_alltypes",
+  "lvsa_negall",
+  "lvsa_no_logic",
+  "vsa_composition",
+  "random",
+  "symbolic_traversal"
+ ],
+ "methods": {
+  "lvsa": {
+   "rank_change": 0.0,
+   "fb15k237_cqa.mrr_A": 18.495924,
+   "fb15k237_cqa.mrr_An": 7.871151,
+   "fb15k237_cqa.hits1_A": 12.132948,
+   "fb15k237_unobservable.mrr_A": 11.174905,
+   "fb15k237_traceability.trace_var_mrr": 47.839682,
+   "fb15k237_traceability.trace_path_p1": 4.9
+  },
+  "lvsa_alltypes": {
+   "rank_change": 0.2195,
+   "fb15k237_cqa.mrr_A": 18.943193,
+   "fb15k237_cqa.mrr_An": 7.928182,
+   "fb15k237_cqa.hits1_A": 12.451931,
+   "fb15k237_unobservable.mrr_A": 11.390117,
+   "fb15k237_traceability.trace_var_mrr": 49.646084,
+   "fb15k237_traceability.trace_path_p1": 5.0
+  },
+  "lvsa_negall": {
+   "rank_change": -0.157,
+   "fb15k237_cqa.mrr_A": 18.266436,
+   "fb15k237_cqa.mrr_An": 7.228585,
+   "fb15k237_cqa.hits1_A": 11.920312,
+   "fb15k237_unobservable.mrr_A": 11.070563,
+   "fb15k237_traceability.trace_var_mrr": 47.839682,
+   "fb15k237_traceability.trace_path_p1": 4.9
+  },
+  "lvsa_no_logic": {
+   "rank_change": -0.4411,
+   "fb15k237_cqa.mrr_A": 17.858351,
+   "fb15k237_cqa.mrr_An": 6.085947,
+   "fb15k237_cqa.hits1_A": 11.674623,
+   "fb15k237_unobservable.mrr_A": 10.817412,
+   "fb15k237_traceability.trace_var_mrr": 47.839682,
+   "fb15k237_traceability.trace_path_p1": 4.9
+  },
+  "lvsa_seed2": {
+   "rank_change": 0.1452,
+   "fb15k237_cqa.mrr_A": 18.667181,
+   "fb15k237_cqa.mrr_An": 7.949051,
+   "fb15k237_cqa.hits1_A": 12.239625,
+   "fb15k237_unobservable.mrr_A": 11.26771,
+   "fb15k237_traceability.trace_var_mrr": 48.765399,
+   "fb15k237_traceability.trace_path_p1": 5.3
+  },
+  "random": {
+   "rank_change": -7.8533,
+   "fb15k237_cqa.mrr_A": 0.057007,
+   "fb15k237_cqa.mrr_An": 0.044337,
+   "fb15k237_cqa.hits1_A": 0.009134,
+   "fb15k237_unobservable.mrr_A": 0.066479,
+   "fb15k237_traceability.trace_var_mrr": 0.341101,
+   "fb15k237_traceability.trace_path_p1": 0.0
+  },
+  "symbolic_traversal": {
+   "rank_change": -3.4803,
+   "fb15k237_cqa.mrr_A": 7.150782,
+   "fb15k237_cqa.mrr_An": 3.156872,
+   "fb15k237_cqa.hits1_A": 4.276273,
+   "fb15k237_unobservable.mrr_A": 6.196783,
+   "fb15k237_traceability.trace_var_mrr": 68.540489,
+   "fb15k237_traceability.trace_path_p1": 3.275
+  },
+  "vsa_composition": {
+   "rank_change": -0.8318,
+   "fb15k237_cqa.mrr_A": 17.226832,
+   "fb15k237_cqa.mrr_An": 4.474304,
+   "fb15k237_cqa.hits1_A": 11.684706,
+   "fb15k237_unobservable.mrr_A": 11.49705,
+   "fb15k237_traceability.trace_var_mrr": 42.478066,
+   "fb15k237_traceability.trace_path_p1": 3.85
+  }
+ },
+ "cases": {
+  "shortcut_duplicate_id": {
+   "note": "one entity listed twice in a ranking",
+   "exit_code": 0,
+   "status": {
+    "shortcut_duplicate_id": "failed: InvalidPrediction: test_std.npz/rank_2i: repeated entity id in row 0"
+   },
+   "methods": {
+    "shortcut_duplicate_id": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_empty": {
+   "note": "prediction archives without any arrays",
+   "exit_code": 0,
+   "status": {
+    "empty": "partial: test_std.npz lacks rank_1p; test_std.npz lacks trace arrays; test_hplus.npz lacks rank_1p"
+   },
+   "methods": {
+    "empty": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_float_nan": {
+   "note": "ranking stored as floats with a NaN",
+   "exit_code": 0,
+   "status": {
+    "shortcut_float_nan": "failed: InvalidPrediction: test_std.npz/rank_3p.npy: dtype '<f8' is not an integer type"
+   },
+   "methods": {
+    "shortcut_float_nan": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_hide_failure": {
+   "note": "extra empty and half-written method directories next to the reference",
+   "exit_code": 0,
+   "status": {
+    "broken": "partial: missing test_std.npz; missing test_hplus.npz",
+    "half_written": "partial: missing test_hplus.npz",
+    "lvsa": "ok"
+   },
+   "methods": {
+    "broken": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    },
+    "half_written": {
+     "rank_change": -1.876,
+     "fb15k237_cqa.mrr_A": 18.495924,
+     "fb15k237_cqa.mrr_An": 7.871151,
+     "fb15k237_cqa.hits1_A": 12.132948,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 47.839682,
+     "fb15k237_traceability.trace_path_p1": 4.9
+    },
+    "lvsa": {
+     "rank_change": 0.0,
+     "fb15k237_cqa.mrr_A": 18.495924,
+     "fb15k237_cqa.mrr_An": 7.871151,
+     "fb15k237_cqa.hits1_A": 12.132948,
+     "fb15k237_unobservable.mrr_A": 11.174905,
+     "fb15k237_traceability.trace_var_mrr": 47.839682,
+     "fb15k237_traceability.trace_path_p1": 4.9
+    }
+   }
+  },
+  "shortcut_negative_id": {
+   "note": "one negative entity id",
+   "exit_code": 0,
+   "status": {
+    "shortcut_negative_id": "failed: InvalidPrediction: test_std.npz/rank_2p: entity id out of range in row 5"
+   },
+   "methods": {
+    "shortcut_negative_id": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_object_array": {
+   "note": "pickled object array instead of integers",
+   "exit_code": 0,
+   "status": {
+    "object_array": "failed: InvalidPrediction: test_std.npz/rank_1p.npy: dtype '|O' is not an integer type"
+   },
+   "methods": {
+    "object_array": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_out_of_range_id": {
+   "note": "one entity id beyond the entity count",
+   "exit_code": 0,
+   "status": {
+    "shortcut_out_of_range_id": "failed: InvalidPrediction: test_std.npz/rank_1p: entity id out of range in row 0"
+   },
+   "methods": {
+    "shortcut_out_of_range_id": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_public_data_tamper": {
+   "note": "public graph and answer files replaced in the sandbox",
+   "exit_code": 0,
+   "status": {
+    "tamper": "ok"
+   },
+   "methods": {
+    "tamper": {
+     "rank_change": 0.0,
+     "fb15k237_cqa.mrr_A": 18.495924,
+     "fb15k237_cqa.mrr_An": 7.871151,
+     "fb15k237_cqa.hits1_A": 12.132948,
+     "fb15k237_unobservable.mrr_A": 11.174905,
+     "fb15k237_traceability.trace_var_mrr": 47.839682,
+     "fb15k237_traceability.trace_path_p1": 4.9
+    }
+   }
+  },
+  "shortcut_reported_claims": {
+   "note": "reference rankings plus claimed metrics/parameter count and a pre-written score file",
+   "exit_code": 0,
+   "status": {
+    "claims": "ok"
+   },
+   "methods": {
+    "claims": {
+     "rank_change": 0.0,
+     "fb15k237_cqa.mrr_A": 18.495924,
+     "fb15k237_cqa.mrr_An": 7.871151,
+     "fb15k237_cqa.hits1_A": 12.132948,
+     "fb15k237_unobservable.mrr_A": 11.174905,
+     "fb15k237_traceability.trace_var_mrr": 47.839682,
+     "fb15k237_traceability.trace_path_p1": 4.9
+    }
+   }
+  },
+  "shortcut_selective_traces": {
+   "note": "reference rankings with trace arrays omitted",
+   "exit_code": 0,
+   "status": {
+    "no_traces": "partial: test_std.npz lacks trace arrays"
+   },
+   "methods": {
+    "no_traces": {
+     "rank_change": -1.3611,
+     "fb15k237_cqa.mrr_A": 18.495924,
+     "fb15k237_cqa.mrr_An": 7.871151,
+     "fb15k237_cqa.hits1_A": 12.132948,
+     "fb15k237_unobservable.mrr_A": 11.174905,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  },
+  "shortcut_truncated_rows": {
+   "note": "half of the 3p rows omitted",
+   "exit_code": 0,
+   "status": {
+    "shortcut_truncated_rows": "failed: InvalidPrediction: test_std.npz/rank_3p: expected 2000 rows, got 1000"
+   },
+   "methods": {
+    "shortcut_truncated_rows": {
+     "rank_change": -7.8827,
+     "fb15k237_cqa.mrr_A": 0.0,
+     "fb15k237_cqa.mrr_An": 0.0,
+     "fb15k237_cqa.hits1_A": 0.0,
+     "fb15k237_unobservable.mrr_A": 0.0,
+     "fb15k237_traceability.trace_var_mrr": 0.0,
+     "fb15k237_traceability.trace_path_p1": 0.0
+    }
+   }
+  }
+ },
+ "seed_noise": {
+  "rank_change_seed2_vs_reference": 0.1452,
+  "abs_metric_differences": {
+   "fb15k237_cqa.mrr_A": 0.1713,
+   "fb15k237_cqa.mrr_Ap": 0.2231,
+   "fb15k237_cqa.mrr_An": 0.0779,
+   "fb15k237_cqa.hits1_A": 0.1067,
+   "fb15k237_cqa.hits1_Ap": 0.1783,
+   "fb15k237_cqa.hits1_An": 0.0222,
+   "fb15k237_cqa.hits3_A": 0.2436,
+   "fb15k237_cqa.hits10_A": 0.2674,
+   "fb15k237_cqa.mrr_1p": 0.0993,
+   "fb15k237_cqa.mrr_2p": 0.2711,
+   "fb15k237_cqa.mrr_3p": 0.1169,
+   "fb15k237_cqa.mrr_2i": 0.2909,
+   "fb15k237_cqa.mrr_3i": 0.0888,
+   "fb15k237_cqa.mrr_ip": 0.5747,
+   "fb15k237_cqa.mrr_pi": 0.8086,
+   "fb15k237_cqa.mrr_2u": 0.0175,
+   "fb15k237_cqa.mrr_up": 0.3571,
+   "fb15k237_cqa.mrr_2in": 0.0109,
+   "fb15k237_cqa.mrr_3in": 0.343,
+   "fb15k237_cqa.mrr_inp": 0.1123,
+   "fb15k237_cqa.mrr_pin": 0.31,
+   "fb15k237_cqa.mrr_pni": 0.2992,
+   "fb15k237_unobservable.mrr_A": 0.0928,
+   "fb15k237_unobservable.mrr_Ap": 0.0013,
+   "fb15k237_unobservable.mrr_An": 0.2622,
+   "fb15k237_unobservable.hits1_A": 0.1355,
+   "fb15k237_unobservable.hits10_A": 0.0679,
+   "fb15k237_unobservable.mrr_1p": 0.3218,
+   "fb15k237_unobservable.mrr_2p": 0.0187,
+   "fb15k237_unobservable.mrr_3p": 0.3596,
+   "fb15k237_unobservable.mrr_2i": 0.2821,
+   "fb15k237_unobservable.mrr_3i": 0.1352,
+   "fb15k237_unobservable.mrr_ip": 0.422,
+   "fb15k237_unobservable.mrr_pi": 0.3784,
+   "fb15k237_unobservable.mrr_2u": 0.915,
+   "fb15k237_unobservable.mrr_up": 0.1799,
+   "fb15k237_unobservable.mrr_2in": 0.0614,
+   "fb15k237_unobservable.mrr_3in": 0.0685,
+   "fb15k237_unobservable.mrr_inp": 0.3462,
+   "fb15k237_unobservable.mrr_pin": 0.7743,
+   "fb15k237_unobservable.mrr_pni": 0.0604,
+   "fb15k237_unobservable.mrr_4p": 0.0022,
+   "fb15k237_unobservable.mrr_4i": 0.5311,
+   "fb15k237_traceability.trace_var_mrr": 0.9257,
+   "fb15k237_traceability.trace_var_p1": 1.1333,
+   "fb15k237_traceability.trace_path_p1": 0.4
+  }
+ },
+ "label_exposure_audit": {
+  "public_test_std_keys": [
+   "obs",
+   "q"
+  ],
+  "public_obs_overlapping_hidden_hard_std": 0,
+  "public_test_hplus_keys": [
+   "obs",
+   "q"
+  ],
+  "public_obs_overlapping_hidden_hard_hplus": 0,
+  "hidden_only_triples": 40876,
+  "release_zip_under_data_or_tmp": []
+ }
+}

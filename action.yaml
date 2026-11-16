@@ -1,8 +1,8 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends.
-action: pending
-gpus: 0
+action: submit
+gpus: 2
 test: false
 milestone: secondary_claims
-notes: ""
+notes: "Hardening: reproduce LVSA on real FB15k-237 / FB15k-237+H (reference, w/o L_NL ablation, baselines), seed replicate on GPU 1, two better-variant candidates, then all quality methods and shortcut cases through the hidden test."

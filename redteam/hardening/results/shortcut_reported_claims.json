@@ -1,0 +1,77 @@
+{
+ "case": "shortcut_reported_claims",
+ "note": "reference rankings plus claimed metrics/parameter count and a pre-written score file",
+ "exit_code": 0,
+ "stderr_tail": "",
+ "scores": {
+  "experiments": {
+   "fb15k237_cqa": {
+    "results": {
+     "claims": {
+      "mrr_A": 18.495924,
+      "mrr_Ap": 24.398576,
+      "mrr_An": 7.871151,
+      "hits1_A": 12.132948,
+      "hits1_Ap": 16.864887,
+      "hits1_An": 3.615458,
+      "hits3_A": 19.714938,
+      "hits10_A": 30.870626,
+      "mrr_1p": 48.290143,
+      "mrr_2p": 11.023024,
+      "mrr_3p": 8.804716,
+      "mrr_2i": 37.020464,
+      "mrr_3i": 50.092419,
+      "mrr_ip": 13.53561,
+      "mrr_pi": 24.130922,
+      "mrr_2u": 17.711208,
+      "mrr_up": 8.978675,
+      "mrr_2in": 9.67722,
+      "mrr_3in": 12.448566,
+      "mrr_inp": 7.122187,
+      "mrr_pin": 4.840078,
+      "mrr_pni": 5.267702
+     }
+    }
+   },
+   "fb15k237_unobservable": {
+    "results": {
+     "claims": {
+      "mrr_A": 11.174905,
+      "mrr_Ap": 14.88565,
+      "mrr_An": 4.495563,
+      "hits1_A": 6.971293,
+      "hits10_A": 18.953702,
+      "mrr_1p": 46.721715,
+      "mrr_2p": 4.504354,
+      "mrr_3p": 3.2312,
+      "mrr_2i": 10.617535,
+      "mrr_3i": 11.828318,
+      "mrr_ip": 8.248956,
+      "mrr_pi": 4.861534,
+      "mrr_2u": 34.375513,
+      "mrr_up": 9.581726,
+      "mrr_2in": 9.500667,
+      "mrr_3in": 3.271615,
+      "mrr_inp": 2.113502,
+      "mrr_pin": 1.991184,
+      "mrr_pni": 5.600847,
+      "mrr_4p": 2.660889,
+      "mrr_4i": 22.40275
+     }
+    }
+   },
+   "fb15k237_traceability": {
+    "results": {
+     "claims": {
+      "trace_var_mrr": 47.839682,
+      "trace_var_p1": 37.966667,
+      "trace_path_p1": 4.9
+     }
+    }
+   }
+  },
+  "_status": {
+   "claims": "ok"
+  }
+ }
+}

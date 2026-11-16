@@ -1,0 +1,77 @@
+{
+ "case": "shortcut_negative_id",
+ "note": "one negative entity id",
+ "exit_code": 0,
+ "stderr_tail": "",
+ "scores": {
+  "experiments": {
+   "fb15k237_cqa": {
+    "results": {
+     "shortcut_negative_id": {
+      "mrr_A": 0.0,
+      "mrr_Ap": 0.0,
+      "mrr_An": 0.0,
+      "hits1_A": 0.0,
+      "hits1_Ap": 0.0,
+      "hits1_An": 0.0,
+      "hits3_A": 0.0,
+      "hits10_A": 0.0,
+      "mrr_1p": 0.0,
+      "mrr_2p": 0.0,
+      "mrr_3p": 0.0,
+      "mrr_2i": 0.0,
+      "mrr_3i": 0.0,
+      "mrr_ip": 0.0,
+      "mrr_pi": 0.0,
+      "mrr_2u": 0.0,
+      "mrr_up": 0.0,
+      "mrr_2in": 0.0,
+      "mrr_3in": 0.0,
+      "mrr_inp": 0.0,
+      "mrr_pin": 0.0,
+      "mrr_pni": 0.0
+     }
+    }
+   },
+   "fb15k237_unobservable": {
+    "results": {
+     "shortcut_negative_id": {
+      "mrr_A": 0.0,
+      "mrr_Ap": 0.0,
+      "mrr_An": 0.0,
+      "hits1_A": 0.0,
+      "hits10_A": 0.0,
+      "mrr_1p": 0.0,
+      "mrr_2p": 0.0,
+      "mrr_3p": 0.0,
+      "mrr_2i": 0.0,
+      "mrr_3i": 0.0,
+      "mrr_ip": 0.0,
+      "mrr_pi": 0.0,
+      "mrr_2u": 0.0,
+      "mrr_up": 0.0,
+      "mrr_2in": 0.0,
+      "mrr_3in": 0.0,
+      "mrr_inp": 0.0,
+      "mrr_pin": 0.0,
+      "mrr_pni": 0.0,
+      "mrr_4p": 0.0,
+      "mrr_4i": 0.0
+     }
+    }
+   },
+   "fb15k237_traceability": {
+    "results": {
+     "shortcut_negative_id": {
+      "trace_var_mrr": 0.0,
+      "trace_var_p1": 0.0,
+      "trace_path_p1": 0.0
+     }
+    }
+   }
+  },
+  "_status": {
+   "shortcut_negative_id": "failed: InvalidPrediction: test_std.npz/rank_2p: entity id out of range in row 5"
+  }
+ }
+}

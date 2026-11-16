@@ -1,0 +1,14 @@
+{
+ "public_test_std_keys": [
+  "obs",
+  "q"
+ ],
+ "public_obs_overlapping_hidden_hard_std": 0,
+ "public_test_hplus_keys": [
+  "obs",
+  "q"
+ ],
+ "public_obs_overlapping_hidden_hard_hplus": 0,
+ "hidden_only_triples": 40876,
+ "release_zip_under_data_or_tmp": []
+}
