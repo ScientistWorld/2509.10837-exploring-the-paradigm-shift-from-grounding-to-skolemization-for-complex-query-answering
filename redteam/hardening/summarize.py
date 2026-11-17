@@ -18,7 +18,8 @@ ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "redteam/hardening/results"
 REF = json.loads((ROOT / "scoring/reference.json").read_text())["experiments"]
 REFERENCE = "lvsa"
-COHORT = ["lvsa", "lvsa_seed2", "lvsa_alltypes", "lvsa_negall", "lvsa_no_logic", "vsa_composition", "random", "symbolic_traversal"]
+COHORT = ["lvsa", "lvsa_seed2", "lvsa_alltypes", "lvsa_residual", "lvsa_residual_alltypes", "lvsa_no_logic",
+          "vsa_composition", "random", "symbolic_traversal"]
 
 
 def flat(scores: dict, method: str) -> dict:
@@ -66,7 +67,7 @@ def main() -> None:
             "rank_change_seed2_vs_reference": summary["methods"]["lvsa_seed2"]["rank_change"],
             "abs_metric_differences": {f"{e}.{k}": round(abs(table["lvsa_seed2"][(e, k)] - table[REFERENCE][(e, k)]), 4) for (e, k) in table[REFERENCE]},
         }
-    for path in sorted(RESULTS.glob("shortcut_*.json")):
+    for path in sorted(list(RESULTS.glob("shortcut_*.json")) + list(RESULTS.glob("alt_*.json"))):
         rec = json.loads(path.read_text())
         entry = {"note": rec["note"], "exit_code": rec["exit_code"]}
         if rec["scores"]:

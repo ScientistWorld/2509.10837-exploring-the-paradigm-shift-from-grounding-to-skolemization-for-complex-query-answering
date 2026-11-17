@@ -66,10 +66,14 @@ class MLP(nn.Module):
 
 
 class LVSA(nn.Module):
-    def __init__(self, num_entities: int, num_relations: int, dim: int = 1000, hidden: int = 2000, init_scale: float = 1e-3):
+    def __init__(self, num_entities: int, num_relations: int, dim: int = 1000, hidden: int = 2000, init_scale: float = 1e-3,
+                 skolem_residual: bool = False):
         super().__init__()
         self.num_entities = num_entities
         self.dim = dim
+        # Not part of the paper: optional residual Skolem module (V = forward + MLP_D(...)),
+        # used only by a hardening variant that probes headroom above the paper's design.
+        self.skolem_residual = skolem_residual
         self.entity = nn.Parameter(torch.randn(num_entities, 2 * dim) * init_scale)
         self.relation = nn.Parameter(torch.randn(num_relations, 2 * dim) * init_scale)
         self.mlp_i = MLP(2 * dim, 2 * dim, hidden)
@@ -150,7 +154,8 @@ class LVSA(nn.Module):
                     node[v] = forward
                 else:
                     successors = [rels[:, j] for (h, j, _t, _n) in branch if h == v]
-                    node[v] = self.mlp_d(torch.cat([forward, self.backward_term(successors)], dim=-1))
+                    skolem = self.mlp_d(torch.cat([forward, self.backward_term(successors)], dim=-1))
+                    node[v] = forward + skolem if self.skolem_residual else skolem
                 pending.remove(v)
         target = self._combine([a for a in branch if a[2] == "x"], node, rels, neg_records, True, pure_vsa)
         return target, node

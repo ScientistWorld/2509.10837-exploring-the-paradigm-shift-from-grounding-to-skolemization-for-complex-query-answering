@@ -8,7 +8,8 @@ benchmark (Gregucci et al., 2025) together with the FB15k-237 triple splits.
 Only public material is written here:
   * the training graph and the validation graph (triples, inverse edges included),
   * training queries with all their answers,
-  * validation queries with their answers (both benchmarks),
+  * validation queries with their answers (both benchmarks), plus a disjoint
+    sample of standard validation queries for model selection (select_std.npz),
   * test *queries* (no answers) for both benchmarks, plus, for every validation
     and test query, the answers that are already reachable by exact traversal of
     the graph observed at that time (``obs_*``). These are derived from public
@@ -66,6 +67,8 @@ HPLUS_TYPES = STD_TYPES + ["4p", "4i"]
 TRAIN_TYPES = ["1p", "2p", "3p", "2i", "3i", "2in", "3in", "inp", "pin", "pni"]
 # Fixed evaluation sample sizes per query type (all queries when fewer exist).
 CAP = {"std": 2000, "hplus": 1000}
+# Separate validation queries for model selection (disjoint from the scored sample).
+SELECT_CAP = 1000
 
 # Node/atom template of every query type: (head, relation column, tail, negated).
 # Anchors are a0, a1, ...; existential variables v1, v2, ...; the target is x.
@@ -129,7 +132,9 @@ def write_npz(path: Path, arrays: dict) -> None:
     tmp = path.with_suffix(".tmp")
     with zipfile.ZipFile(tmp, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=1) as z:
         for key, (arr, shape) in arrays.items():
-            z.writestr(key + ".npy", npy_bytes(arr, shape))
+            info = zipfile.ZipInfo(key + ".npy", date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            z.writestr(info, npy_bytes(arr, shape), compresslevel=1)
     tmp.replace(path)
 
 
@@ -241,7 +246,15 @@ def structure_names(queries: dict) -> dict:
     return {lookup[s]: s for s in queries if s in lookup}
 
 
-def build_eval_split(zf, bench_dir, bench, split, types, adj_obs, all_entities, with_answers):
+def select_queries(queries: set, qtype: str) -> list:
+    """Model-selection sample: validation queries outside the scored validation sample."""
+    scored = set(sample_queries(queries, "std", "valid", qtype, CAP["std"]))
+    rest = sorted(set(queries) - scored)
+    rng = random.Random(f"lvsa-gym|std|select|{qtype}|v1")
+    return rest if len(rest) <= SELECT_CAP else sorted(rng.sample(rest, SELECT_CAP))
+
+
+def build_eval_split(zf, bench_dir, bench, split, types, adj_obs, all_entities, with_answers, selection=False):
     queries = load_pickle(zf, bench_dir + f"{split}-queries.pkl")
     names = structure_names(queries)
     easy = load_pickle(zf, bench_dir + f"{split}-easy-answers.pkl") if with_answers else None
@@ -250,7 +263,10 @@ def build_eval_split(zf, bench_dir, bench, split, types, adj_obs, all_entities, 
     counts = {}
     for qtype in types:
         structure = names[qtype]
-        chosen = sample_queries(queries[structure], bench, split, qtype, CAP[bench])
+        if selection:
+            chosen = select_queries(queries[structure], qtype)
+        else:
+            chosen = sample_queries(queries[structure], bench, split, qtype, CAP[bench])
         rows = array.array("i")
         obs_rows, hard_rows, filt_rows = [], [], []
         for q in chosen:
@@ -332,6 +348,10 @@ def main() -> None:
         arrays, c = build_eval_split(zf, bench_dir, bench, "test", types, adj_trainvalid, all_entities, False)
         write_npz(out / f"test_{bench}.npz", arrays)
         counts[f"test_{bench}"] = c
+
+    arrays, c = build_eval_split(zf, STD, "std", "valid", STD_TYPES, adj_train, all_entities, True, selection=True)
+    write_npz(out / "select_std.npz", arrays)
+    counts["select_std"] = c
 
     meta = {
         "dataset": "FB15k-237 (BetaE query splits) and FB15k-237+H",

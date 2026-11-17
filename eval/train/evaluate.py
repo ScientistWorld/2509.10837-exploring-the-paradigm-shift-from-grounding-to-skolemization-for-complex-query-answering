@@ -161,10 +161,10 @@ def load_truth(data_dir: Path, bench: str, types: list) -> dict:
     return truth
 
 
-def load_graph(data_dir: Path) -> dict:
-    """Graph in which validation answers hold: training plus validation triples."""
+def load_graph(data_dir: Path, names=("train_triples.npy", "valid_triples.npy")) -> dict:
+    """Default: the graph in which validation answers hold (training plus validation triples)."""
     adj = defaultdict(set)
-    for name in ("train_triples.npy", "valid_triples.npy"):
+    for name in names:
         arr, shape = read_npy_file(data_dir / name)
         for i in range(shape[0]):
             adj[(arr[3 * i], arr[3 * i + 1])].add(arr[3 * i + 2])
@@ -211,52 +211,73 @@ def first_unfiltered(row, ignored):
     return None
 
 
-def trace_metrics(truth: dict, preds: dict, adj: dict, n_entities: int) -> dict:
+def trace_metrics(truth: dict, preds: dict, adj: dict, observed: dict, n_entities: int) -> dict:
+    """Intermediate-witness metrics on 2p/3p queries.
+
+    Candidates already reachable from the anchor on the observed graph (V1:
+    observed r1-neighbours; V2: observed two-hop entities) are ignored wherever
+    they appear in a trace list. A variable slot is scored when at least one
+    unobserved entity lies on a complete-graph chain from the anchor to a
+    non-trivial answer; the path metric uses the top non-ignored intermediates
+    and the top non-ignored answer.
+    """
     empty = set()
-    res = {}
+    slot_rr, slot_p1, path2, path3 = [], [], [], []
+
+    def rr_skip(row, valid, skip):
+        pos = 0
+        for e in row:
+            if e in skip:
+                continue
+            pos += 1
+            if e in valid:
+                return 1.0 / pos
+        return 0.0
+
     t2 = truth["2p"]
     trace = rows_of(*preds["trace_2p_v1"], n_entities, len(t2["queries"]), "trace_2p_v1")
     answers = rows_of(*preds["rank_2p"], n_entities, len(t2["queries"]), "rank_2p")
-    rr, p1, path = [], [], []
     for q, hard, ignored, tr, ans in zip(t2["queries"], t2["hard"], t2["filt"], trace, answers):
         a0, r0, r1 = q
         first = adj.get((a0, r0), empty)
-        valid = {e for e in first if adj.get((e, r1), empty) & hard}
-        rr.append(next((1.0 / (i + 1) for i, e in enumerate(tr) if e in valid), 0.0))
-        p1.append(1.0 if tr[0] in valid else 0.0)
+        seen1 = observed.get((a0, r0), empty)
+        valid = {e for e in first if e not in seen1 and adj.get((e, r1), empty) & hard}
+        top1 = first_unfiltered(tr, seen1)
+        if valid:
+            slot_rr.append(rr_skip(tr, valid, seen1))
+            slot_p1.append(1.0 if top1 in valid else 0.0)
         top = first_unfiltered(ans, ignored)
-        path.append(1.0 if top in hard and tr[0] in first and top in adj.get((tr[0], r1), empty) else 0.0)
-    res["2p_v1"] = (mean(rr), mean(p1))
-    path_2p = mean(path)
+        path2.append(1.0 if top in hard and top1 in first and top in adj.get((top1, r1), empty) else 0.0)
 
     t3 = truth["3p"]
     tr1 = rows_of(*preds["trace_3p_v1"], n_entities, len(t3["queries"]), "trace_3p_v1")
     tr2 = rows_of(*preds["trace_3p_v2"], n_entities, len(t3["queries"]), "trace_3p_v2")
     answers = rows_of(*preds["rank_3p"], n_entities, len(t3["queries"]), "rank_3p")
-    rr1, p11, rr2, p12, path = [], [], [], [], []
     for q, hard, ignored, v1, v2, ans in zip(t3["queries"], t3["hard"], t3["filt"], tr1, tr2, answers):
         a0, r0, r1, r2 = q
         first = adj.get((a0, r0), empty)
-        second = set()
+        seen1 = observed.get((a0, r0), empty)
+        second, seen2 = set(), set()
         for e in first:
             second |= adj.get((e, r1), empty)
+        for e in seen1:
+            seen2 |= observed.get((e, r1), empty)
         valid2 = {e for e in second if adj.get((e, r2), empty) & hard}
         valid1 = {e for e in first if adj.get((e, r1), empty) & valid2}
-        rr1.append(next((1.0 / (i + 1) for i, e in enumerate(v1) if e in valid1), 0.0))
-        p11.append(1.0 if v1[0] in valid1 else 0.0)
-        rr2.append(next((1.0 / (i + 1) for i, e in enumerate(v2) if e in valid2), 0.0))
-        p12.append(1.0 if v2[0] in valid2 else 0.0)
+        for row, val, seen in ((v1, valid1, seen1), (v2, valid2, seen2)):
+            unobserved = val - seen
+            if unobserved:
+                slot_rr.append(rr_skip(row, unobserved, seen))
+                slot_p1.append(1.0 if first_unfiltered(row, seen) in unobserved else 0.0)
         top = first_unfiltered(ans, ignored)
-        ok = top in hard and v1[0] in first and v2[0] in adj.get((v1[0], r1), empty) and top in adj.get((v2[0], r2), empty)
-        path.append(1.0 if ok else 0.0)
-    res["3p_v1"] = (mean(rr1), mean(p11))
-    res["3p_v2"] = (mean(rr2), mean(p12))
+        top1, top2 = first_unfiltered(v1, seen1), first_unfiltered(v2, seen2)
+        ok = top in hard and top1 in first and top2 in adj.get((top1, r1), empty) and top in adj.get((top2, r2), empty)
+        path3.append(1.0 if ok else 0.0)
     return {
-        "trace_var_mrr": 100 * mean(v[0] for v in res.values()),
-        "trace_var_p1": 100 * mean(v[1] for v in res.values()),
-        "trace_path_p1": 100 * mean([path_2p, mean(path)]),
+        "trace_var_mrr": 100 * mean(slot_rr),
+        "trace_var_p1": 100 * mean(slot_p1),
+        "trace_path_p1": 100 * mean([mean(path2), mean(path3)]),
     }
-
 
 def worst(metrics: list) -> dict:
     return {m: 0.0 for m in metrics}
@@ -288,7 +309,7 @@ def validate_all(preds: dict, truth: dict, n_entities: int, file_name: str) -> N
             rows_of(arr, shape, n_entities, len(truth[t]["queries"]), f"{file_name}/{key}")
 
 
-def score_method(method_dir: Path, truth: dict, adj: dict, n_entities: int):
+def score_method(method_dir: Path, truth: dict, adj: dict, observed: dict, n_entities: int):
     status = []
     preds = {}
     for bench, fname in SPLIT_FILES.items():
@@ -318,7 +339,7 @@ def score_method(method_dir: Path, truth: dict, adj: dict, n_entities: int):
         except KeyError as exc:
             status.append(f"valid_std.npz lacks {exc.args[0]}")
         if all(k in preds["std"] for k in ("trace_2p_v1", "trace_3p_v1", "trace_3p_v2", "rank_2p", "rank_3p")):
-            results[EXP_TRACE] = trace_metrics(truth["std"], preds["std"], adj, n_entities)
+            results[EXP_TRACE] = trace_metrics(truth["std"], preds["std"], adj, observed, n_entities)
         else:
             status.append("valid_std.npz lacks trace arrays")
     if "hplus" in preds:
@@ -355,12 +376,13 @@ def main() -> None:
     n_entities = int(meta["num_entities"])
     truth = {"std": load_truth(args.data, "std", STD_TYPES), "hplus": load_truth(args.data, "hplus", HPLUS_TYPES)}
     adj = load_graph(args.data)
+    observed = load_graph(args.data, ("train_triples.npy",))
 
     methods = sorted(p.name for p in args.outputs.iterdir() if p.is_dir() and not p.name.startswith(".")) if args.outputs.is_dir() else []
     payload = {"experiments": {EXP_STD: {"results": {}}, EXP_HPLUS: {"results": {}}, EXP_TRACE: {"results": {}}}, "_status": {}}
     for name in methods:
         try:
-            results, status = score_method(args.outputs / name, truth, adj, n_entities)
+            results, status = score_method(args.outputs / name, truth, adj, observed, n_entities)
             results = {exp: {m: clean(v) for m, v in vals.items()} for exp, vals in results.items()}
         except (InvalidPrediction, Exception) as exc:  # noqa: BLE001 - any failure scores as failed
             results = {EXP_STD: worst(STD_METRICS), EXP_HPLUS: worst(HPLUS_METRICS), EXP_TRACE: worst(TRACE_METRICS)}

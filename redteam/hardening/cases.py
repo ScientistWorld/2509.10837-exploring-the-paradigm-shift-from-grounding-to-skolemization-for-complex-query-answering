@@ -148,6 +148,39 @@ def main() -> None:
     os.symlink(ref / "test_hplus.npz", d / "outputs/no_traces/test_hplus.npz")
     run("shortcut_selective_traces", d, "reference rankings with trace arrays omitted")
 
+    # 9b. traces from an observed-graph lookup (hand-written rule) next to the reference answers
+    sym = load(OUT / "symbolic_traversal", "test_std.npz")
+    trace_keys = ("trace_2p_v1", "trace_3p_v1", "trace_3p_v2")
+    d = sandbox("shortcut_lookup_traces")
+    a = dict(std)
+    a.update({k: sym[k] for k in trace_keys})
+    save(d, "lookup_traces", "test_std.npz", a)
+    os.symlink(ref / "test_hplus.npz", d / "outputs/lookup_traces/test_hplus.npz")
+    run("shortcut_lookup_traces", d, "reference answers with intermediate rankings from an observed-graph degree lookup")
+
+    d = sandbox("shortcut_lookup_prefix")
+    a = dict(std)
+    for k in trace_keys:
+        rows = []
+        for lookup_row, ref_row in zip(sym[k], std[k]):
+            head = int(lookup_row[0])
+            rows.append([head] + [int(x) for x in ref_row if int(x) != head][: len(ref_row) - 1])
+        a[k] = np.asarray(rows, dtype=np.int16)
+    save(d, "lookup_prefix", "test_std.npz", a)
+    os.symlink(ref / "test_hplus.npz", d / "outputs/lookup_prefix/test_hplus.npz")
+    run("shortcut_lookup_prefix", d, "reference traces with the lookup's top entity inserted at rank 1")
+
+    # 9c. honest alternative: training-free composition for the intersection-then-projection types
+    vsa = {f: load(OUT / "vsa_composition", f) for f in TEST_FILES}
+    d = sandbox("alt_type_switch")
+    for f, base in (("test_std.npz", std), ("test_hplus.npz", hplus)):
+        a = dict(base)
+        for t in ("ip", "pi", "up", "4p"):
+            if f"rank_{t}" in a:
+                a[f"rank_{t}"] = vsa[f][f"rank_{t}"]
+        save(d, "type_switch", f, a)
+    run("alt_type_switch", d, "reference rankings, but training-free composition rankings for ip, pi, up and 4p")
+
     # 10. self-reported claims and a forged score file
     d = sandbox("shortcut_reported_claims")
     link_method(d, "claims", ref)

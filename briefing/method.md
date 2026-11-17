@@ -44,11 +44,15 @@ unobservable queries, and yields more interpretable intermediate witnesses.
   prediction objective (weight 0.25), Adagrad lr 0.1, batch 1,000, 100 epochs
   (the paper initialises from pretrained ComplEx, d = 1000);
 - stage 2: embeddings frozen, `MLP_I`/`MLP_D` on 2p+3p with cross entropy plus
-  the in-batch candidate term (Eq. 25), Adam lr 5e-4, batch 512, 20 epochs;
+  the in-batch candidate term (Eq. 25), Adam lr 5e-4, batch 512, up to 60
+  epochs;
 - stage 3: negator on 2in with `L_CE + L_NS + L_NL` (alpha = beta = 1,
-  `MSELoss(x, y) = ||x - y||^2` as in Eq. 20), Adam lr 5e-4, 30 epochs;
+  `MSELoss(x, y) = ||x - y||^2` as in Eq. 20), Adam lr 5e-4, up to 100 epochs;
+- in stages 2-3 the checkpoint with the best filtered MRR on a disjoint
+  validation sample (`select_std.npz`, the stage's own query types) is kept;
 - ablation `lvsa_no_logic`: stage 3 rerun with beta = 0 (same stages 1-2).
 
-Choices not fixed by the paper: epochs per stage, batch sizes, MLP width and
-depth, relation-prediction weight. Grid search over alpha/beta/lr is not
+Choices not fixed by the paper: epochs per stage and checkpoint selection,
+batch sizes, MLP width and depth, relation-prediction weight. Trace lists leave
+out intermediates already reachable on the observed graph. Grid search over alpha/beta/lr is not
 repeated (the paper's selected values are used).

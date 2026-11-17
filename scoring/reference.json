@@ -2,7 +2,7 @@
  "experiments": {
   "fb15k237_cqa": {
    "description": "Complex query answering on the standard FB15k-237 benchmark (BetaE query splits, 14 query types): rank the non-trivial answers of each test query, i.e. answers that need at least one fact missing from the observed graph. Paper Tables IV/V (and Table VII for the negation ablation).",
-   "notes": "Paper numbers (percent) are recorded unchanged. Gym protocol: the paper's own data and filtered MRR/Hits over non-trivial answers, with these departures: (1) a fixed sample of 2000 test queries per type instead of all test queries; (2) methods submit their top-1000 entities per query and unlisted answers count as reciprocal rank 0; (3) besides the benchmark's easy answers, every entity already reachable on the observed train+valid graph is ignored when ranking (identical to the standard filter for positive types; for negated types it also ignores entities that only fail the negated atom through a held-out fact, so post-hoc removal of graph-reachable entities cannot change a score). lvsa_no_logic / lvsa_wo_lns hold the paper's Table VII ablation values.",
+   "notes": "Paper numbers (percent) are recorded unchanged. Gym protocol: the paper's own data and filtered MRR/Hits over non-trivial answers, with these departures: (1) a fixed sample of 2000 test queries per type instead of all test queries; (2) methods submit their top-1000 entities per query and unlisted answers count as reciprocal rank 0; (3) besides the benchmark's easy answers, every entity already reachable on the observed train+valid graph is ignored when ranking (identical to the standard filter for positive types; for negated types it also ignores entities that only fail the negated atom through a held-out fact, so post-hoc removal of graph-reachable entities cannot change a score). Checkpoints are selected on a disjoint sample of validation queries (select_std.npz), never on the scored validation sample. lvsa_no_logic / lvsa_wo_lns hold the paper's Table VII ablation values.",
    "weight": 0.55,
    "primary_metric": "mrr_A",
    "metrics": {
@@ -461,33 +461,33 @@
    }
   },
   "fb15k237_traceability": {
-   "description": "Whether the rankings a method emits for the existential variables of 2p/3p queries identify real intermediate entities on a path to a non-trivial answer, and whether the top intermediate choices and top answer form a valid chain. Paper Table VIII (interpretability / logic fidelity).",
-   "notes": "The paper's Table VIII counts an intermediate entity as valid when the remaining sub-query is satisfiable on the full graph; on partially observable queries that is satisfied by any observed neighbour, so a graph lookup scores near 100%. The gym therefore requires the path to reach a non-trivial (held-out) answer. The paper's numbers are not on this scale and are kept under _paper_table_viii; the lvsa entry holds this gym's reproduced reference values.",
+   "description": "Whether the rankings a method emits for the existential variables of 2p/3p queries identify missing intermediate entities that lie on a complete-graph path to a non-trivial answer, and whether the top intermediate choices and the top answer form such a chain. Paper Table VIII (interpretability / logic fidelity).",
+   "notes": "The paper's Table VIII counts an intermediate entity as valid when the remaining sub-query is satisfiable on the full graph. On these partially observable queries an observed-neighbour degree lookup then scores ~69 variable-level MRR versus ~49 for the reproduced method (hardening run 1), and with the lookup's traces next to the reference answers it also raised path P@1. The gym therefore ignores intermediates already reachable on the observed graph (V1: observed r1-neighbours of the anchor; V2: observed two-hop entities) wherever they appear, scores only variable slots that have an unobserved valid intermediate (on a complete-graph chain to a non-trivial answer), and uses the top non-ignored intermediates for the path metric. The paper's numbers are not on this scale and are kept under _paper_table_viii; the lvsa entry holds this gym's reproduced reference values.",
    "weight": 0.2,
    "primary_metric": "trace_var_mrr",
    "metrics": {
     "trace_var_mrr": {
      "higher_is_better": true,
      "coefficient": 1.0,
-     "description": "Mean reciprocal rank (%) of the first valid intermediate entity in each existential variable's ranking (2p V1, 3p V1, 3p V2 averaged); valid = lies on a full-graph path from the anchor to a non-trivial answer."
+     "description": "Mean reciprocal rank (%) of the first valid unobserved intermediate in each existential variable's ranking, over all 2p-V1 / 3p-V1 / 3p-V2 slots that have one; observed intermediates are skipped."
     },
     "trace_var_p1": {
      "higher_is_better": true,
      "coefficient": 0.5,
-     "description": "Precision at 1 (%) of the same intermediate rankings."
+     "description": "Precision at 1 (%) of the same rankings (top non-observed entry valid)."
     },
     "trace_path_p1": {
      "higher_is_better": true,
-     "coefficient": 1.0,
-     "description": "Fraction (%) of 2p/3p queries whose top intermediate entities and top non-trivial answer form a valid full-graph reasoning chain ending at a non-trivial answer (2p and 3p averaged)."
+     "coefficient": 0.25,
+     "description": "Fraction (%) of 2p/3p queries whose top non-observed intermediates and top non-ignored answer form a complete-graph chain ending at a non-trivial answer (2p and 3p averaged)."
     }
    },
    "results": {
     "lvsa": {
      "type": "proposed",
-     "trace_var_mrr": 47.84,
-     "trace_var_p1": 37.97,
-     "trace_path_p1": 4.9
+     "trace_var_mrr": null,
+     "trace_var_p1": null,
+     "trace_path_p1": null
     },
     "lvsa_no_logic": {
      "type": "baseline"

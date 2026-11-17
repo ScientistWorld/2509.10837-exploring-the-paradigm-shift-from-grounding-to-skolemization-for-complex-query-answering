@@ -20,8 +20,8 @@ Rank the full-inference answers of FB15k-237+H queries (14 standard types plus
 - **Reference**: paper `mrr_A` (A_H) 12.2.
 
 ## Secondary / constraint: fb15k237_traceability
-Intermediate entities named for 2p/3p queries must lie on complete-graph paths
-to non-trivial answers. This is the logic-fidelity requirement: answer accuracy
+Intermediate entities named for 2p/3p queries must be inferred (not observed)
+entities on complete-graph paths to non-trivial answers. This is the logic-fidelity requirement: answer accuracy
 must not be bought with untraceable reasoning.
 - **Metrics**: `trace_var_mrr` (primary), `trace_var_p1`, `trace_path_p1`.
 

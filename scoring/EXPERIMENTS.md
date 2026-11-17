@@ -23,9 +23,10 @@ grounding intermediate variables over known neighbours, scores much lower here
 than on the standard benchmark.
 
 ## fb15k237_traceability (weight 0.20)
-Establishes whether a method's intermediate reasoning is faithful: for 2- and
-3-hop path queries, the method names candidate entities for each intermediate
-variable, and the experiment checks whether they lie on a real path to a
-scored (non-trivial) answer and whether the top intermediate choices and the
-top answer form a valid chain. Intermediates that only exist on the observed
-graph do not count, so this cannot be satisfied by graph lookup alone.
+Establishes whether a method's intermediate reasoning is faithful and
+inferential: for 2- and 3-hop path queries, the method names candidate
+entities for each intermediate variable, and the experiment checks whether
+they are missing (not observed) intermediate entities that lie on a real path
+to a scored answer, and whether the top intermediate choices and the top answer
+form a valid chain. Intermediates that can be read off the observed graph are
+ignored, so this cannot be satisfied by graph lookup.

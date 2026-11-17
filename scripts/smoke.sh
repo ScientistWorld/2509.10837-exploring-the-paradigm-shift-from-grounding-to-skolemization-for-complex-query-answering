@@ -16,7 +16,8 @@ import torch
 
 sys.path.insert(0, "method")
 from lvsa import HPLUS_TYPES, LVSA, STD_TYPES, num_anchors  # noqa: E402
-from predict import predict_file  # noqa: E402
+from predict import ObservedGraph, predict_file  # noqa: E402
+from train import select_mrr  # noqa: E402
 
 data = Path("data/downloads/fb15k237")
 meta = json.loads((data / "meta.json").read_text())
@@ -58,9 +59,23 @@ for t in STD_TYPES:
     small[f"obs_{t}_indptr"] = ip[:4] - ip[0]
     small[f"obs_{t}_indices"] = z[f"obs_{t}_indices"][ip[0]:ip[3]]
 np.savez(tmp / "valid_std.npz", **small)
+obs = ObservedGraph(np.load(data / "train_triples.npy"), meta["num_relations"])
 with torch.no_grad():
-    predict_file(model, tmp / "valid_std.npz", tmp / "out.npz", STD_TYPES, torch.device("cpu"), False, True, 500)
+    predict_file(model, tmp / "valid_std.npz", tmp / "out.npz", STD_TYPES, torch.device("cpu"), False, True, 500, obs)
 out = np.load(tmp / "out.npz")
+q2 = small["q_2p"][0]
+assert not (set(out["trace_2p_v1"][0].tolist()) & set(obs.neighbors([q2[0]], q2[1]).tolist())), "observed V1 kept in trace"
+
+residual = LVSA(n, meta["num_relations"], dim=8, hidden=16, skolem_residual=True)
+sel = np.load(data / "select_std.npz", allow_pickle=False)
+small_sel = {}
+for t in ("2p", "2in"):
+    hp, fp = sel[f"hard_{t}_indptr"], sel[f"filt_{t}_indptr"]
+    small_sel[f"q_{t}"] = sel[f"q_{t}"][:5]
+    small_sel[f"hard_{t}_indptr"], small_sel[f"hard_{t}_indices"] = hp[:6] - hp[0], sel[f"hard_{t}_indices"][hp[0]:hp[5]]
+    small_sel[f"filt_{t}_indptr"], small_sel[f"filt_{t}_indices"] = fp[:6] - fp[0], sel[f"filt_{t}_indices"][fp[0]:fp[5]]
+score = select_mrr(residual, small_sel, ["2p", "2in"], torch.device("cpu"))
+assert 0.0 <= score <= 100.0, score
 assert out["rank_3p"].shape == (3, 1000) and out["trace_3p_v2"].shape == (3, 100)
 for t in STD_TYPES:
     row = out[f"rank_{t}"][0]

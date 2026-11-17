@@ -1,0 +1,20 @@
+method                  D0 mrr   D0 p1 |  T1 mrr   T1 p1     n |  T2 mrr   T2 p1 |   path
+lvsa                     49.52   39.72 |   21.80   12.02  2488 |    6.88    5.12 |   3.65
+vsa_composition          44.48   34.77 |   18.57   10.93  2488 |    5.19    4.02 |   3.10
+symbolic_traversal       69.22   63.78 |    0.28    0.08  2488 |    4.29    3.68 |   2.05
+random                    0.40    0.12 |    0.27    0.08  2488 |    0.00    0.00 |   0.00
+lvsa_no_logic            49.52   39.72 |   21.80   12.02  2488 |    6.88    5.12 |   3.65
+lvsa_seed2               48.57   38.37 |   21.80   11.98  2488 |    6.54    4.75 |   3.15
+lvsa_alltypes            51.39   41.52 |   22.39   12.14  2488 |    8.12    6.32 |   4.92
+hybrid_lvsa+lookup       69.22   63.78 |    0.28    0.08  2488 |    7.71    6.78 |   4.58
+hybrid_lvsa+1p           44.48   34.77 |   18.57   10.93  2488 |    5.78    4.32 |   2.70
+filtered path P@1 (observed intermediates skipped, chain must reach a hard answer)
+  lvsa                   2p  2.65  3p  0.25
+  vsa_composition        2p  1.60  3p  0.15
+  symbolic_traversal     2p  0.00  3p  0.00
+  random                 2p  0.00  3p  0.00
+  lvsa_no_logic          2p  2.65  3p  0.25
+  lvsa_seed2             2p  2.90  3p  0.20
+  lvsa_alltypes          2p  2.50  3p  0.25
+  hybrid_lvsa+lookup     2p  0.05  3p  0.00
+  hybrid_lvsa+1p         2p  2.05  3p  0.20

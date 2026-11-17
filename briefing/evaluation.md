@@ -11,6 +11,7 @@ benchmarks and prepares `data/downloads/fb15k237/`:
 | `train_triples.npy`, `valid_triples.npy` | observed graph `[n, 3]` (head, relation, tail); relation ids come in inverse pairs, `inverse(r) = r ^ 1` |
 | `train_queries.npz` | training queries of 10 types (`q_<type>`) with all answers (`ans_<type>_indptr/indices`, CSR) |
 | `valid_std.npz`, `valid_hplus.npz` | validation queries (`q_<type>`), their scored answers (`hard_*`), the entities ignored when ranking (`filt_*`) and the entities reachable on the observed training graph (`obs_*`) |
+| `select_std.npz` | further validation queries (disjoint from the scored ones) with the same fields, for model selection |
 | `test_std.npz`, `test_hplus.npz` | test queries (`q_<type>`) and the entities reachable on the observed train+valid graph (`obs_*`); no answers |
 
 A query row lists its anchor entities followed by its relation ids, in the
@@ -40,13 +41,17 @@ All values are percentages; higher is better.
   `mrr_A` / `hits*_A` average the 14 standard types, `*_Ap` the 9 positive
   types (1p 2p 3p 2i 3i ip pi 2u up), `*_An` the 5 negated types (2in 3in inp
   pin pni). `mrr_<type>` reports each type.
-- **Traceability.** For a 2p query `a -r1-> V1 -r2-> x` an entity is a valid
+- **Traceability.** For a 2p query `a -r1-> V1 -r2-> x`, an entity is a valid
   `V1` if `(a, r1, V1)` and `(V1, r2, t)` hold in the complete graph for some
-  scored answer `t` (3p: `V1`, `V2` must lie on a complete-graph chain from `a`
-  to a scored answer). `trace_var_mrr` / `trace_var_p1`: reciprocal rank of the
-  first valid entity / precision at 1 in each variable's ranking, averaged over
-  2p-V1, 3p-V1 and 3p-V2. `trace_path_p1`: fraction of queries whose top-1
-  intermediate entities and top-1 non-ignored answer form a valid
+  scored answer `t`; for 3p, `V1` and `V2` must lie on a complete-graph chain
+  from `a` to a scored answer. Intermediates already reachable from the anchor
+  on the observed graph (`V1`: observed `r1`-neighbours of `a`; `V2`: observed
+  two-hop entities) are ignored wherever they appear in a trace list, exactly
+  like ignored answers, so only inferred (missing-fact) intermediates count.
+  `trace_var_mrr` / `trace_var_p1`: reciprocal rank of the first valid
+  intermediate / precision at 1, over every 2p-V1, 3p-V1 and 3p-V2 slot that
+  has an unobserved valid intermediate. `trace_path_p1`: fraction of queries
+  whose top non-ignored intermediates and top non-ignored answer form a valid
   complete-graph chain ending at a scored answer (2p and 3p averaged).
 
 ## Submission format
@@ -62,7 +67,9 @@ arrays (`np.savez`, no pickles), rows in the order of the public query files:
 `rank_*` rows list entity ids best first, without repeats (`1 <= K <= 14505`;
 1000 is enough in practice, and the `obs_*` entities may be left out because
 they are ignored). Trace rows rank candidate entities for each existential
-variable (`KT = 100` recommended).
+variable (`KT = 100` recommended; observed intermediates may be left out).
+For validation the observed graph is `train_triples.npy`; for test it is
+train + valid.
 
 ## Scoring rules
 

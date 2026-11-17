@@ -120,13 +120,17 @@ unobservable queries, and yields more interpretable intermediate witnesses.
   prediction objective (weight 0.25), Adagrad lr 0.1, batch 1,000, 100 epochs
   (the paper initialises from pretrained ComplEx, d = 1000);
 - stage 2: embeddings frozen, `MLP_I`/`MLP_D` on 2p+3p with cross entropy plus
-  the in-batch candidate term (Eq. 25), Adam lr 5e-4, batch 512, 20 epochs;
+  the in-batch candidate term (Eq. 25), Adam lr 5e-4, batch 512, up to 60
+  epochs;
 - stage 3: negator on 2in with `L_CE + L_NS + L_NL` (alpha = beta = 1,
-  `MSELoss(x, y) = ||x - y||^2` as in Eq. 20), Adam lr 5e-4, 30 epochs;
+  `MSELoss(x, y) = ||x - y||^2` as in Eq. 20), Adam lr 5e-4, up to 100 epochs;
+- in stages 2-3 the checkpoint with the best filtered MRR on a disjoint
+  validation sample (`select_std.npz`, the stage's own query types) is kept;
 - ablation `lvsa_no_logic`: stage 3 rerun with beta = 0 (same stages 1-2).
 
-Choices not fixed by the paper: epochs per stage, batch sizes, MLP width and
-depth, relation-prediction weight. Grid search over alpha/beta/lr is not
+Choices not fixed by the paper: epochs per stage and checkpoint selection,
+batch sizes, MLP width and depth, relation-prediction weight. Trace lists leave
+out intermediates already reachable on the observed graph. Grid search over alpha/beta/lr is not
 repeated (the paper's selected values are used).
 
 ---
@@ -144,6 +148,7 @@ benchmarks and prepares `data/downloads/fb15k237/`:
 | `train_triples.npy`, `valid_triples.npy` | observed graph `[n, 3]` (head, relation, tail); relation ids come in inverse pairs, `inverse(r) = r ^ 1` |
 | `train_queries.npz` | training queries of 10 types (`q_<type>`) with all answers (`ans_<type>_indptr/indices`, CSR) |
 | `valid_std.npz`, `valid_hplus.npz` | validation queries (`q_<type>`), their scored answers (`hard_*`), the entities ignored when ranking (`filt_*`) and the entities reachable on the observed training graph (`obs_*`) |
+| `select_std.npz` | further validation queries (disjoint from the scored ones) with the same fields, for model selection |
 | `test_std.npz`, `test_hplus.npz` | test queries (`q_<type>`) and the entities reachable on the observed train+valid graph (`obs_*`); no answers |
 
 A query row lists its anchor entities followed by its relation ids, in the
@@ -173,13 +178,17 @@ All values are percentages; higher is better.
   `mrr_A` / `hits*_A` average the 14 standard types, `*_Ap` the 9 positive
   types (1p 2p 3p 2i 3i ip pi 2u up), `*_An` the 5 negated types (2in 3in inp
   pin pni). `mrr_<type>` reports each type.
-- **Traceability.** For a 2p query `a -r1-> V1 -r2-> x` an entity is a valid
+- **Traceability.** For a 2p query `a -r1-> V1 -r2-> x`, an entity is a valid
   `V1` if `(a, r1, V1)` and `(V1, r2, t)` hold in the complete graph for some
-  scored answer `t` (3p: `V1`, `V2` must lie on a complete-graph chain from `a`
-  to a scored answer). `trace_var_mrr` / `trace_var_p1`: reciprocal rank of the
-  first valid entity / precision at 1 in each variable's ranking, averaged over
-  2p-V1, 3p-V1 and 3p-V2. `trace_path_p1`: fraction of queries whose top-1
-  intermediate entities and top-1 non-ignored answer form a valid
+  scored answer `t`; for 3p, `V1` and `V2` must lie on a complete-graph chain
+  from `a` to a scored answer. Intermediates already reachable from the anchor
+  on the observed graph (`V1`: observed `r1`-neighbours of `a`; `V2`: observed
+  two-hop entities) are ignored wherever they appear in a trace list, exactly
+  like ignored answers, so only inferred (missing-fact) intermediates count.
+  `trace_var_mrr` / `trace_var_p1`: reciprocal rank of the first valid
+  intermediate / precision at 1, over every 2p-V1, 3p-V1 and 3p-V2 slot that
+  has an unobserved valid intermediate. `trace_path_p1`: fraction of queries
+  whose top non-ignored intermediates and top non-ignored answer form a valid
   complete-graph chain ending at a scored answer (2p and 3p averaged).
 
 ## Submission format
@@ -195,7 +204,9 @@ arrays (`np.savez`, no pickles), rows in the order of the public query files:
 `rank_*` rows list entity ids best first, without repeats (`1 <= K <= 14505`;
 1000 is enough in practice, and the `obs_*` entities may be left out because
 they are ignored). Trace rows rank candidate entities for each existential
-variable (`KT = 100` recommended).
+variable (`KT = 100` recommended; observed intermediates may be left out).
+For validation the observed graph is `train_triples.npy`; for test it is
+train + valid.
 
 ## Scoring rules
 
