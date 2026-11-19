@@ -611,6 +611,59 @@ numbers of other systems are recorded in `scoring/reference.json`.
 
 </details>
 
+### Iteration 11: claude-opus-5-5 (hardener)
+- **Milestone**: `secondary_claims` | **Status**: done
+- **Working time**: 52m | **GPU**: 1.3h
+- **Jobs**: 2 total (2 completed, 0 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-11-19] - secondary_claims (hardening)
+- Replaced the synthetic substitute with the paper's FB15k-237 standard and FB15k-237+H benchmarks; test truth only under eval/test/data.
+- Reproduced LVSA at the paper's scale: hidden-test mrr_A 18.72 (paper 22.4), FB15k-237+H 11.29 (paper 12.2); w/o L_NL lowers negation MRR 8.07 -> 5.75 (paper 10.9 -> 7.6).
+- Seed noise 0.024 rank; better variants +0.14 to +0.40; all audited shortcuts closed or scored worst (HARDENING.md).
+
+### [2026-05-29 06:09] - secondary_claims
+- Continued from the completed `secondary_claims` state and independently checked the paper method summary against the packaged implementation.
+- Re-ran `python validate.py --compare` and `python validate.py --post-design`; both passed.
+- Confirmed the final action remains `done` because the environment already contains a validated LVSA reproduction, baseline, ablation, trace scoring, and reusable scripts.
+
+### [2026-05-29 06:50] - secondary_claims
+- Final verification preserved the `secondary_claims` milestone.
+- Cleaned method-specific wording from from-scratch-visible documentation and clarified that scaled benchmark reference targets are local gym targets, not paper-published values.
+- Re-ran `python validate.py --compare`, `python validate.py --post-design`, and shell syntax checks for the main scripts; all passed.
+
+### [2026-05-29 06:45] - secondary_claims
+- CPU test job `a80ed4a6-a5d` completed successfully after the dependent-Skolemization fix.
+- The job passed the LVSA smoke test, trained the graph-structured LVSA model, trained the no-logic ablation, wrote combined scores, and passed `python validate.py --compare`.
+- Refreshed scaled benchmark results: LVSA MRR 0.4914 versus random MRR 0.0556; negated-query 2in MRR 0.6334 versus 0.5109 for the no-logic ablation.
+- Traceability metrics were produced from method outputs: trace-variable MRR 0.2535, trace-variable P@1 0.1638, and trace-path P@1 0.0703.
+- Restored `secondary_claims` because the verified run now covers the core CQA gain plus the paper's logical-negation and traceability secondary claims in the scaled package.
+
+### [2026-05-29 06:35] - core_claim_plus
+- Reviewed failed CPU test job `5c6ed090-2a1`; stage 1 completed, then stage 2 crashed on an undefined `forward` variable in dependent Skolemization.
+- Fixed `method/lvsa.py` to concatenate `forward_vec` with the backward dependency vector.
+- Added `scripts/smoke.sh` and wired it into `scripts/run.sh` and `scripts/reproduce.sh` so the compute job catches LVSA forward/scoring regressions before training.
+- Resubmitting a CPU test job to retrain and refresh scores.
+
+### [2026-05-29 06:20] - core_claim_plus
+- Continued from the reset `core_claim_plus` milestone and audited method, evaluation, scripts, scoring docs, and environment.
+- Fixed standalone evaluation against legacy prediction artifacts by comparing canonical query identifiers while keeping fixed test labels as the source of truth.
+- Fixed `scripts/reproduce.sh` to run the baseline, LVSA method, no-logic ablation, combined evaluation, and validation.
+- Did not restore `secondary_claims` yet because the current scores predate the graph-structured LVSA encoder change; submitting a CPU retraining job to refresh them.
+
+### [2026-05-29 05:55] - core_claim_plus
+- Hardened the evaluator so fixed test labels are the source of truth and predictions cannot carry their own answers.
+- Reworked LVSA query execution around explicit branch atoms, dependency-order variable materialization, dependent Skolemization, and generic trace scoring.
+- Prepared a compute-side retraining job to refresh the benchmark scores after the implementation audit fixes.
+
+### [2026-05-29 05:32] - core_claim_plus
+- Existing scaled reproduction trains LVSA end-to-end and beats the random baseline on the deterministic CQA benchmark.
+- Existing no-logic ablation shows weaker negated-query performance than the full logical objective.
+
+</details>
+
 
 ---
 

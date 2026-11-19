@@ -1,8 +1,6 @@
 # Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends.
-action: submit
-gpus: 2
-test: false
+action: done
 milestone: secondary_claims
-notes: "Hardening run 2: reference LVSA stages 2-3 with validation-split checkpoint selection (stage 1 reused), ablation, baselines, lookup-proof traceability; seed replicate, residual and multi-type variants; all quality methods and shortcut cases through the hidden test."
+notes: "Gym moved to the paper's FB15k-237 / FB15k-237+H benchmarks with hidden test truth; LVSA reproduced (std MRR 18.7 vs 22.4, +H 11.3 vs 12.2, L_NL ablation in paper direction); better variants +0.14..+0.40 vs seed noise 0.024; audited shortcuts closed (HARDENING.md)."
