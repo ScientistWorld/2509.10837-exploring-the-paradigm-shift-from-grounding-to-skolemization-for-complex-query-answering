@@ -1,0 +1,77 @@
+{
+ "case": "alt_type_switch",
+ "note": "reference rankings, but training-free composition rankings for ip, pi, up and 4p",
+ "exit_code": 0,
+ "stderr_tail": "",
+ "scores": {
+  "experiments": {
+   "fb15k237_cqa": {
+    "results": {
+     "type_switch": {
+      "mrr_A": 18.790806,
+      "mrr_Ap": 24.748233,
+      "mrr_An": 8.067437,
+      "hits1_A": 12.457666,
+      "hits1_Ap": 17.310966,
+      "hits1_An": 3.721724,
+      "hits3_A": 20.042781,
+      "hits10_A": 31.000666,
+      "mrr_1p": 48.290143,
+      "mrr_2p": 11.614823,
+      "mrr_3p": 9.03993,
+      "mrr_2i": 37.020464,
+      "mrr_3i": 50.092419,
+      "mrr_ip": 16.646201,
+      "mrr_pi": 23.868754,
+      "mrr_2u": 17.711208,
+      "mrr_up": 8.450158,
+      "mrr_2in": 9.9198,
+      "mrr_3in": 12.38454,
+      "mrr_inp": 7.337708,
+      "mrr_pin": 4.999325,
+      "mrr_pni": 5.695813
+     }
+    }
+   },
+   "fb15k237_unobservable": {
+    "results": {
+     "type_switch": {
+      "mrr_A": 12.237273,
+      "mrr_Ap": 16.337735,
+      "mrr_An": 4.856442,
+      "hits1_A": 8.0526,
+      "hits10_A": 19.861382,
+      "mrr_1p": 46.721715,
+      "mrr_2p": 4.184572,
+      "mrr_3p": 3.411938,
+      "mrr_2i": 10.617535,
+      "mrr_3i": 11.828318,
+      "mrr_ip": 14.209711,
+      "mrr_pi": 7.655641,
+      "mrr_2u": 34.375513,
+      "mrr_up": 14.034674,
+      "mrr_2in": 9.627256,
+      "mrr_3in": 3.585811,
+      "mrr_inp": 2.692251,
+      "mrr_pin": 2.544162,
+      "mrr_pni": 5.832729,
+      "mrr_4p": 3.146541,
+      "mrr_4i": 22.40275
+     }
+    }
+   },
+   "fb15k237_traceability": {
+    "results": {
+     "type_switch": {
+      "trace_var_mrr": 23.83009,
+      "trace_var_p1": 14.269536,
+      "trace_path_p1": 1.425
+     }
+    }
+   }
+  },
+  "_status": {
+   "type_switch": "ok"
+  }
+ }
+}

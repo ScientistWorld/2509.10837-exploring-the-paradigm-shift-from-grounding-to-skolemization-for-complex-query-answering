@@ -1,0 +1,77 @@
+{
+ "case": "shortcut_lookup_prefix",
+ "note": "reference traces with the lookup's top entity inserted at rank 1",
+ "exit_code": 0,
+ "stderr_tail": "",
+ "scores": {
+  "experiments": {
+   "fb15k237_cqa": {
+    "results": {
+     "lookup_prefix": {
+      "mrr_A": 18.717475,
+      "mrr_Ap": 24.634162,
+      "mrr_An": 8.067437,
+      "hits1_A": 12.275834,
+      "hits1_Ap": 17.028118,
+      "hits1_An": 3.721724,
+      "hits3_A": 20.02195,
+      "hits10_A": 31.118611,
+      "mrr_1p": 48.290143,
+      "mrr_2p": 11.614823,
+      "mrr_3p": 9.03993,
+      "mrr_2i": 37.020464,
+      "mrr_3i": 50.092419,
+      "mrr_ip": 13.599246,
+      "mrr_pi": 24.861057,
+      "mrr_2u": 17.711208,
+      "mrr_up": 9.478168,
+      "mrr_2in": 9.9198,
+      "mrr_3in": 12.38454,
+      "mrr_inp": 7.337708,
+      "mrr_pin": 4.999325,
+      "mrr_pni": 5.695813
+     }
+    }
+   },
+   "fb15k237_unobservable": {
+    "results": {
+     "lookup_prefix": {
+      "mrr_A": 11.287199,
+      "mrr_Ap": 14.859842,
+      "mrr_An": 4.856442,
+      "hits1_A": 7.072217,
+      "hits10_A": 19.048318,
+      "mrr_1p": 46.721715,
+      "mrr_2p": 4.184572,
+      "mrr_3p": 3.411938,
+      "mrr_2i": 10.617535,
+      "mrr_3i": 11.828318,
+      "mrr_ip": 8.236402,
+      "mrr_pi": 5.185719,
+      "mrr_2u": 34.375513,
+      "mrr_up": 9.176865,
+      "mrr_2in": 9.627256,
+      "mrr_3in": 3.585811,
+      "mrr_inp": 2.692251,
+      "mrr_pin": 2.544162,
+      "mrr_pni": 5.832729,
+      "mrr_4p": 2.489808,
+      "mrr_4i": 22.40275
+     }
+    }
+   },
+   "fb15k237_traceability": {
+    "results": {
+     "lookup_prefix": {
+      "trace_var_mrr": 23.436092,
+      "trace_var_p1": 13.552284,
+      "trace_path_p1": 1.325
+     }
+    }
+   }
+  },
+  "_status": {
+   "lookup_prefix": "ok"
+  }
+ }
+}

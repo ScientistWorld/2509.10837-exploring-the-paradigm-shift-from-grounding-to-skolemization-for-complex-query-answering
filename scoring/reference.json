@@ -485,9 +485,9 @@
    "results": {
     "lvsa": {
      "type": "proposed",
-     "trace_var_mrr": null,
-     "trace_var_p1": null,
-     "trace_path_p1": null
+     "trace_var_mrr": 23.83,
+     "trace_var_p1": 14.27,
+     "trace_path_p1": 1.43
     },
     "lvsa_no_logic": {
      "type": "baseline"
