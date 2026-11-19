@@ -4,6 +4,11 @@
 
 ## Progress Log
 
+### [2026-11-19] - secondary_claims (hardening)
+- Replaced the synthetic substitute with the paper's FB15k-237 standard and FB15k-237+H benchmarks; test truth only under eval/test/data.
+- Reproduced LVSA at the paper's scale: hidden-test mrr_A 18.72 (paper 22.4), FB15k-237+H 11.29 (paper 12.2); w/o L_NL lowers negation MRR 8.07 -> 5.75 (paper 10.9 -> 7.6).
+- Seed noise 0.024 rank; better variants +0.14 to +0.40; all audited shortcuts closed or scored worst (HARDENING.md).
+
 ### [2026-05-29 06:09] - secondary_claims
 - Continued from the completed `secondary_claims` state and independently checked the paper method summary against the packaged implementation.
 - Re-ran `python validate.py --compare` and `python validate.py --post-design`; both passed.

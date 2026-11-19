@@ -1,0 +1,13 @@
+{
+ "case": "shortcut_composition_traces",
+ "note": "reference answers with intermediate rankings from training-free composition (a different computation than the answers)",
+ "rank_change": 0.0547,
+ "trace": {
+  "trace_var_mrr": 25.434429,
+  "trace_var_p1": 15.96829,
+  "trace_path_p1": 1.375
+ },
+ "status": {
+  "answers_lvsa_traces_vsa": "ok"
+ }
+}

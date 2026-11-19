@@ -1,3 +1,5 @@
+> **Superseded (iteration 11):** this file describes the retired synthetic gym. The current gym (FB15k-237 / FB15k-237+H, hidden test truth under `eval/test/data/`) is documented in `HARDENING.md`, `briefing/` and `scoring/`.
+
 # Verification Report
 
 ## Initial Assessment

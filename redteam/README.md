@@ -1,3 +1,5 @@
+> The cases in this folder audited the retired synthetic gym (iteration 10). The current gym's hidden-test checks live in `hardening/` and are summarised in `../HARDENING.md`.
+
 # Gym scoring audit
 
 Run all cases on a compute node with `bash redteam/run_all.sh`. Every case also
